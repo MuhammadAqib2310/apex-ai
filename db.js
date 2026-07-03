@@ -1,13 +1,17 @@
 /**
  * db.js
- * Lightweight, dependency-free persistence layer backed by a JSON file on disk.
+ * Persistence layer — uses /tmp on Vercel (serverless), local data/ folder otherwise.
  */
 
 const path = require('path');
-const fs = require('fs');
+const fs   = require('fs');
 
-const DATA_DIR = path.join(__dirname, 'data');
-const DB_FILE = path.join(DATA_DIR, 'app.json');
+// Vercel serverless: only /tmp is writable
+const IS_VERCEL = process.env.VERCEL === '1';
+const DATA_DIR  = IS_VERCEL
+  ? '/tmp/apex-data'
+  : path.join(__dirname, 'data');
+const DB_FILE   = path.join(DATA_DIR, 'app.json');
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
