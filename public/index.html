@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Apex AI — Trading & Market Analysis</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===================== AUTH SCREEN ===================== -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-bg-glow"></div>
+  <div class="auth-card">
+    <div class="auth-logo-wrap">
+      <div class="logo-lg">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+          <polyline points="16 7 22 7 22 13"></polyline>
+        </svg>
+      </div>
+      <div>
+        <h1 class="auth-title">Apex AI</h1>
+        <p class="tagline">Trading &amp; Market Analysis</p>
+      </div>
+    </div>
+
+    <div class="auth-features">
+      <div class="feat"><span>📈</span> Live Forex &amp; Crypto Analysis</div>
+      <div class="feat"><span>🤖</span> AI-Powered Trade Signals</div>
+      <div class="feat"><span>🔒</span> Secure &amp; Private</div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="tab-btn active" id="tabLogin">Sign In</button>
+      <button class="tab-btn" id="tabSignup">Create Account</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form id="loginForm" class="auth-form">
+      <div class="input-group">
+        <span class="input-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        </span>
+        <input type="email" id="loginEmail" placeholder="Email address" required autocomplete="email" />
+      </div>
+      <div class="input-group">
+        <span class="input-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </span>
+        <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password" />
+        <button type="button" class="eye-btn" onclick="togglePass('loginPassword',this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+      </div>
+      <div class="auth-error" id="loginError"></div>
+      <button type="submit" class="primary-btn" id="loginBtn">
+        <span class="btn-text">Sign In</span>
+        <span class="btn-loader" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        </span>
+      </button>
+    </form>
+
+    <!-- SIGNUP FORM -->
+    <form id="signupForm" class="auth-form" style="display:none;">
+      <div class="input-group">
+        <span class="input-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </span>
+        <input type="text" id="signupName" placeholder="Full name" required autocomplete="name" />
+      </div>
+      <div class="input-group">
+        <span class="input-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        </span>
+        <input type="email" id="signupEmail" placeholder="Email address" required autocomplete="email" />
+      </div>
+      <div class="input-group">
+        <span class="input-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </span>
+        <input type="password" id="signupPassword" placeholder="Password (min 6 characters)" required autocomplete="new-password" />
+        <button type="button" class="eye-btn" onclick="togglePass('signupPassword',this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+      </div>
+      <div class="password-strength" id="pwStrength" style="display:none">
+        <div class="strength-bar"><div id="strengthFill"></div></div>
+        <span id="strengthText"></span>
+      </div>
+      <div class="auth-error" id="signupError"></div>
+      <button type="submit" class="primary-btn" id="signupBtn">
+        <span class="btn-text">Create Account</span>
+        <span class="btn-loader" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        </span>
+      </button>
+      <p class="terms-note">By signing up you agree to our Terms of Service &amp; Privacy Policy.</p>
+    </form>
+
+    <div class="auth-footer">
+      <span>🔒 256-bit encrypted · Your data is private</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== APP SCREEN ===================== -->
+<div id="appScreen" class="app-screen" style="display:none;">
+
+  <header>
+    <div class="header-left">
+      <button class="hamburger" id="hamburgerBtn" title="Menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <div class="brand">
+        <div class="logo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+            <polyline points="16 7 22 7 22 13"></polyline>
+          </svg>
+        </div>
+        <div>
+          <h1>Apex AI</h1>
+          <span>Trading &amp; Market Analysis</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Price Ticker -->
+    <div class="ticker-bar" id="tickerBar">
+      <div class="ticker-inner" id="tickerInner">
+        <span class="ticker-item">BTC/USD <span class="t-price" id="t-btc">—</span></span>
+        <span class="ticker-sep">|</span>
+        <span class="ticker-item">ETH/USD <span class="t-price" id="t-eth">—</span></span>
+        <span class="ticker-sep">|</span>
+        <span class="ticker-item">EUR/USD <span class="t-price" id="t-eur">—</span></span>
+        <span class="ticker-sep">|</span>
+        <span class="ticker-item">Gold <span class="t-price" id="t-gold">—</span></span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="status" id="status">
+        <div class="dot off" id="statusDot"></div>
+        <span id="statusText">Checking…</span>
+      </div>
+      <!-- Theme Toggle -->
+      <button class="icon-btn" id="themeBtn" title="Toggle light/dark mode">
+        <svg id="themeIconDark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg id="themeIconLight" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+      <div class="user-menu">
+        <div class="user-avatar" id="userAvatar" onclick="openProfile()" style="cursor:pointer" title="Profile">U</div>
+        <span id="userName">User</span>
+        <button id="logoutBtn" class="icon-btn" title="Log out">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Sidebar Overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+      <button class="new-chat-btn" id="newChatBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        New Analysis
+      </button>
+      <button class="dashboard-btn" id="dashboardBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Market Dashboard
+      </button>
+
+      <h3>Quick Analysis</h3>
+      <button class="quick-btn" data-prompt="Give me a full technical analysis of EUR/USD">🇪🇺 EUR/USD</button>
+      <button class="quick-btn" data-prompt="Give me a full technical analysis of GBP/USD">🇬🇧 GBP/USD</button>
+      <button class="quick-btn" data-prompt="Give me a full technical analysis of BTC/USD">₿ BTC/USD</button>
+      <button class="quick-btn" data-prompt="Give me a full technical analysis of ETH/USD">⟠ ETH/USD</button>
+      <button class="quick-btn" data-prompt="Give me a full technical analysis of XAU/USD (Gold)">🥇 Gold (XAU/USD)</button>
+      <button class="quick-btn" data-prompt="Give me a full technical analysis of NASDAQ">📊 NASDAQ</button>
+      <button class="quick-btn" data-prompt="Give me a full technical analysis of US30">🏛️ US30 (Dow Jones)</button>
+      <button class="quick-btn" data-prompt="Give me a full technical analysis of SOL/USD">◎ SOL/USD</button>
+
+      <h3>History</h3>
+      <div id="conversationList" class="conversation-list"></div>
+
+      <div class="disclaimer-box">
+        ⚠️ Educational analysis only — not financial advice. Risk only 1–2% per trade.
+      </div>
+    </aside>
+
+    <section class="chat-area">
+      <div class="messages" id="messages">
+        <div class="welcome" id="welcome">
+          <div class="welcome-logo">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+              <polyline points="16 7 22 7 22 13"></polyline>
+            </svg>
+          </div>
+          <h2>Welcome to Apex AI</h2>
+          <p>Ask about any Forex pair, crypto, stock, commodity, or index. I break down trend, technicals, SMC/ICT structure, entries, and targets — with proper risk management.</p>
+          <div class="welcome-chips">
+            <button class="chip" onclick="setInput('Analyze BTC/USD')">₿ BTC Analysis</button>
+            <button class="chip" onclick="setInput('EUR/USD trend today')">EUR/USD Trend</button>
+            <button class="chip" onclick="setInput('Gold outlook this week')">🥇 Gold Outlook</button>
+            <button class="chip" onclick="setInput('Best crypto to trade today')">🔥 Hot Cryptos</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-bar">
+        <!-- File Preview Area -->
+        <div class="file-preview-area" id="filePreviewArea" style="display:none;">
+          <div class="file-preview-list" id="filePreviewList"></div>
+        </div>
+
+        <div class="input-wrap">
+          <!-- File Upload Button -->
+          <button class="input-action-btn" id="fileBtn" title="Attach file (PDF, image, CSV)">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+            </svg>
+          </button>
+          <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.csv,.txt" multiple style="display:none;" />
+
+          <textarea id="input" rows="1" placeholder="Ask about EUR/USD, BTC, Gold, NASDAQ… or attach a chart"></textarea>
+
+          <!-- Voice Button -->
+          <button class="input-action-btn voice-btn" id="voiceBtn" title="Voice input">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="voiceIcon">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          </button>
+
+          <!-- Send Button -->
+          <button class="send-btn" id="sendBtn" title="Send">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+        <div class="hint">Apex AI provides educational analysis only — not financial advice.</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Market Dashboard Modal -->
+<div class="chart-modal" id="dashboardModal" style="display:none;">
+  <div class="chart-modal-inner" style="max-width:760px;">
+    <div class="chart-modal-header">
+      <span>📊 Market Dashboard — Live Prices</span>
+      <button class="chart-close" id="dashboardClose">✕</button>
+    </div>
+    <div class="dashboard-grid" id="dashboardGrid">
+      <div class="dash-loading">Loading prices…</div>
+    </div>
+  </div>
+</div>
+
+<!-- TradingView Chart Modal -->
+<div class="chart-modal" id="chartModal" style="display:none;">
+  <div class="chart-modal-inner">
+    <div class="chart-modal-header">
+      <span id="chartModalTitle">Chart</span>
+      <button class="chart-close" id="chartClose">✕</button>
+    </div>
+    <div id="chartContainer" style="height:480px;"></div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="profile-modal" id="profileModal" style="display:none;">
+  <div class="profile-modal-inner">
+
+    <div class="profile-header">
+      <div class="profile-avatar-lg" id="profileAvatarLg">U</div>
+      <div>
+        <div class="profile-name" id="profileNameDisplay">User</div>
+        <div class="profile-email" id="profileEmailDisplay">user@email.com</div>
+        <div class="profile-joined" id="profileJoined"></div>
+      </div>
+      <button class="chart-close" id="profileClose" style="margin-left:auto">✕</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="profile-tabs">
+      <button class="ptab active" id="ptabInfo" onclick="switchPTab('info')">Profile</button>
+      <button class="ptab" id="ptabPassword" onclick="switchPTab('password')">Password</button>
+      <button class="ptab danger-tab" id="ptabDelete" onclick="switchPTab('delete')">Delete Account</button>
+    </div>
+
+    <!-- Profile Tab -->
+    <div id="pTabInfo" class="ptab-content">
+      <form id="profileForm" class="auth-form" style="margin-top:0">
+        <div class="input-group">
+          <span class="input-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </span>
+          <input type="text" id="profileName" placeholder="Full Name" required />
+        </div>
+        <div class="input-group">
+          <span class="input-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          </span>
+          <input type="email" id="profileEmail" placeholder="Email Address" required />
+        </div>
+        <div class="auth-error" id="profileError"></div>
+        <div class="profile-success" id="profileSuccess" style="display:none"></div>
+        <button type="submit" class="primary-btn" id="profileSaveBtn">
+          <span class="btn-text">Save Changes</span>
+          <span class="btn-loader" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Password Tab -->
+    <div id="pTabPassword" class="ptab-content" style="display:none">
+      <form id="passwordForm" class="auth-form" style="margin-top:0">
+        <div class="input-group">
+          <span class="input-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+          <input type="password" id="currentPassword" placeholder="Current Password" required />
+          <button type="button" class="eye-btn" onclick="togglePass('currentPassword',this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+        </div>
+        <div class="input-group">
+          <span class="input-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+          <input type="password" id="newPassword" placeholder="New Password (min 6)" required />
+          <button type="button" class="eye-btn" onclick="togglePass('newPassword',this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+        </div>
+        <div class="input-group">
+          <span class="input-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+          <input type="password" id="confirmPassword" placeholder="Confirm New Password" required />
+        </div>
+        <div class="auth-error" id="passwordError"></div>
+        <div class="profile-success" id="passwordSuccess" style="display:none"></div>
+        <button type="submit" class="primary-btn" id="passwordSaveBtn">
+          <span class="btn-text">Update Password</span>
+          <span class="btn-loader" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Delete Account Tab -->
+    <div id="pTabDelete" class="ptab-content" style="display:none">
+      <div class="danger-zone">
+        <div class="danger-icon">⚠️</div>
+        <h3>Delete Account</h3>
+        <p>This will permanently delete your account, all conversations and messages. This action <strong>cannot be undone</strong>.</p>
+        <form id="deleteForm" class="auth-form" style="margin-top:16px">
+          <div class="input-group">
+            <span class="input-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+            <input type="password" id="deletePassword" placeholder="Enter your password to confirm" required />
+          </div>
+          <div class="auth-error" id="deleteError"></div>
+          <button type="submit" class="danger-btn" id="deleteBtn">
+            <span class="btn-text">Delete My Account</span>
+            <span class="btn-loader" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
