@@ -5,7 +5,7 @@
 
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'change-this-secret-in-env';
+const JWT_SECRET = process.env.JWT_SECRET || 'apex-ai-super-secret-jwt-key-2024';
 
 function requireAuth(req, res, next) {
   const header = req.headers.authorization || '';
