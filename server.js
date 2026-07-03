@@ -25,7 +25,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Basic rate limiting to protect the AI + market data endpoints from abuse
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 30,
+  max: 60,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests. Please slow down and try again shortly.' },

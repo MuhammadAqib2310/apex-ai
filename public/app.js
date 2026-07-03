@@ -89,6 +89,10 @@ tabLogin.addEventListener('click', () => {
   signupForm.style.display = 'none';
   hideError(loginError);
   hideError(signupError);
+  // Hide password strength bar when switching to login
+  const pwStr = document.getElementById('pwStrength');
+  if (pwStr) pwStr.style.display = 'none';
+  document.getElementById('signupPassword').value = '';
 });
 tabSignup.addEventListener('click', () => {
   tabSignup.classList.add('active');
@@ -129,6 +133,10 @@ loginForm.addEventListener('submit', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error('Server error. Please try again.');
+    }
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Login failed');
     setSession(data.token, data.user);
@@ -159,6 +167,11 @@ signupForm.addEventListener('submit', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password }),
     });
+    // Check content type before parsing JSON
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error('Server error. Please try again.');
+    }
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Signup failed');
     setSession(data.token, data.user);
