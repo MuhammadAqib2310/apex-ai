@@ -1599,3 +1599,257 @@ function renderScannerResults(items) {
 
   scannerResults.appendChild(grid);
 }
+
+// ---------------------------------------------------------------------------
+// Bull vs Bear Debate
+// ---------------------------------------------------------------------------
+const debateModal      = document.getElementById('debateModal');
+const debateBtn        = document.getElementById('debateBtn');
+const debateModalClose = document.getElementById('debateModalClose');
+const debateRunBtn     = document.getElementById('debateRunBtn');
+const debateResults    = document.getElementById('debateResults');
+const debateStatus     = document.getElementById('debateStatus');
+const debateStatusText = document.getElementById('debateStatusText');
+const debateSymbolEl   = document.getElementById('debateSymbol');
+
+// Quick chip selection
+document.querySelectorAll('.debate-quick').forEach(btn => {
+  btn.addEventListener('click', () => {
+    debateSymbolEl.value = btn.dataset.sym;
+    debateSymbolEl.focus();
+  });
+});
+
+debateBtn.addEventListener('click', () => { openDebate(); closeSidebar(); });
+debateModalClose.addEventListener('click', closeDebate);
+debateModal.addEventListener('click', (e) => { if (e.target === debateModal) closeDebate(); });
+
+debateSymbolEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') runDebate();
+});
+
+function openDebate() {
+  debateModal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  debateResults.innerHTML = '';
+  debateStatus.style.display = 'none';
+  debateSymbolEl.value = '';
+  setTimeout(() => debateSymbolEl.focus(), 100);
+  document.addEventListener('keydown', debateEsc);
+}
+function closeDebate() {
+  debateModal.style.display = 'none';
+  document.body.style.overflow = '';
+  document.removeEventListener('keydown', debateEsc);
+}
+function debateEsc(e) { if (e.key === 'Escape') closeDebate(); }
+
+debateRunBtn.addEventListener('click', runDebate);
+
+async function runDebate() {
+  const sym = debateSymbolEl.value.trim();
+  if (!sym) {
+    debateSymbolEl.focus();
+    debateSymbolEl.style.borderColor = 'var(--red)';
+    setTimeout(() => { debateSymbolEl.style.borderColor = ''; }, 1500);
+    return;
+  }
+
+  setLoading(debateRunBtn, true);
+  debateStatus.style.display = 'flex';
+  debateStatusText.textContent = `Fetching live data for ${sym}…`;
+  debateResults.innerHTML = '';
+
+  // Fetch live quote if available
+  let liveBlock = '';
+  try {
+    const res = await fetch(`${API}/market/quote?symbol=${encodeURIComponent(sym)}`, { headers: authHeaders() });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.quote?.price) {
+        const q = data.quote;
+        liveBlock = `\n[LIVE DATA] ${sym}: Price=${q.price}, Change=${q.percentChange}%, High=${q.high}, Low=${q.low}, Open=${q.open}`;
+      }
+    }
+  } catch (_) {}
+
+  debateStatusText.textContent = 'AI preparing Bull & Bear arguments…';
+
+  const prompt = `You are running a structured trading debate for ${sym}.${liveBlock}
+
+Generate a professional Bull vs Bear debate with EXACTLY this JSON format (no other text):
+{
+  "symbol": "${sym}",
+  "price": "current price if known, else null",
+  "bull": {
+    "score": 72,
+    "arguments": [
+      "Strong uptrend above EMA 200 — buyers in control",
+      "RSI reset from oversold, momentum building",
+      "Key support held at 65000 — high probability bounce"
+    ],
+    "keyLevel": "Target: 72000",
+    "summary": "One sentence bull case conclusion"
+  },
+  "bear": {
+    "score": 28,
+    "arguments": [
+      "Failed to break resistance at 70000 twice — sellers strong",
+      "Volume declining on rallies — weak buyer conviction",
+      "Macro headwinds: Fed tightening, USD strength"
+    ],
+    "keyLevel": "Risk: Break below 63000",
+    "summary": "One sentence bear case conclusion"
+  },
+  "verdict": {
+    "bias": "Bullish",
+    "text": "Two sentence final verdict weighing both sides."
+  }
+}
+
+Rules:
+- score must add up to 100
+- provide exactly 3 arguments per side
+- be specific with price levels
+- bias must be Bullish, Bearish, or Neutral`;
+
+  try {
+    const res = await fetch(`${API}/chat`, {
+      method: 'POST',
+      headers: authHeaders(true),
+      body: JSON.stringify({ message: prompt }),
+    });
+
+    if (!res.ok) throw new Error('API error');
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText  = '';
+    let buffer    = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data: ')) continue;
+        try {
+          const json = JSON.parse(trimmed.slice(6));
+          if (json.type === 'delta') fullText += json.delta;
+        } catch (_) {}
+      }
+    }
+
+    // Parse JSON
+    const jsonMatch = fullText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON in response');
+
+    const data = JSON.parse(jsonMatch[0]);
+    renderDebateResults(data);
+
+  } catch (err) {
+    debateResults.innerHTML = `<div class="scanner-empty">⚠️ Could not generate debate. Please try again.</div>`;
+  } finally {
+    setLoading(debateRunBtn, false);
+    debateStatus.style.display = 'none';
+  }
+}
+
+function renderDebateResults(data) {
+  const bullScore = Math.min(100, Math.max(0, data.bull?.score || 50));
+  const bearScore = 100 - bullScore;
+  const biasClass = data.verdict?.bias?.toLowerCase().includes('bull') ? 'bull'
+                  : data.verdict?.bias?.toLowerCase().includes('bear') ? 'bear' : 'neutral';
+  const biasEmoji = biasClass === 'bull' ? '🐂' : biasClass === 'bear' ? '🐻' : '⚖️';
+
+  const bullArgs  = (data.bull?.arguments || []).slice(0, 3);
+  const bearArgs  = (data.bear?.arguments || []).slice(0, 3);
+
+  debateResults.innerHTML = `
+    <!-- Score bar -->
+    <div class="debate-score-bar-wrap">
+      <div class="debate-score-bar-labels">
+        <span class="bull-label">🐂 Bulls ${bullScore}%</span>
+        <span class="bear-label">${bearScore}% Bears 🐻</span>
+      </div>
+      <div class="debate-score-track">
+        <div class="debate-score-fill" style="width:0%" id="debateScoreFill"></div>
+      </div>
+    </div>
+
+    <!-- Two sides -->
+    <div class="debate-arena">
+      <!-- BULL SIDE -->
+      <div class="debate-side bull">
+        <div class="debate-side-header">
+          <span class="debate-side-icon">🐂</span>
+          <div>
+            <div class="debate-side-title">Bullish Case</div>
+            <span class="debate-score">Strength: ${bullScore}%</span>
+          </div>
+        </div>
+        <ul class="debate-args">
+          ${bullArgs.map(a => `<li class="debate-arg"><span class="debate-arg-icon">✅</span><span>${escapeHtml(a)}</span></li>`).join('')}
+        </ul>
+        ${data.bull?.keyLevel ? `<div class="debate-key-level">🎯 ${escapeHtml(data.bull.keyLevel)}</div>` : ''}
+        ${data.bull?.summary ? `<div style="font-size:12.5px;color:var(--text-dim);font-style:italic;margin-top:4px;">"${escapeHtml(data.bull.summary)}"</div>` : ''}
+      </div>
+
+      <!-- BEAR SIDE -->
+      <div class="debate-side bear">
+        <div class="debate-side-header">
+          <span class="debate-side-icon">🐻</span>
+          <div>
+            <div class="debate-side-title">Bearish Case</div>
+            <span class="debate-score">Strength: ${bearScore}%</span>
+          </div>
+        </div>
+        <ul class="debate-args">
+          ${bearArgs.map(a => `<li class="debate-arg"><span class="debate-arg-icon">🔴</span><span>${escapeHtml(a)}</span></li>`).join('')}
+        </ul>
+        ${data.bear?.keyLevel ? `<div class="debate-key-level">⚠️ ${escapeHtml(data.bear.keyLevel)}</div>` : ''}
+        ${data.bear?.summary ? `<div style="font-size:12.5px;color:var(--text-dim);font-style:italic;margin-top:4px;">"${escapeHtml(data.bear.summary)}"</div>` : ''}
+      </div>
+    </div>
+
+    <!-- Verdict -->
+    <div class="debate-verdict">
+      <div class="debate-verdict-title">⚖️ AI Verdict</div>
+      <div class="debate-verdict-badge ${biasClass}">${biasEmoji} ${data.verdict?.bias || 'Neutral'}</div>
+      <div class="debate-verdict-text">${escapeHtml(data.verdict?.text || '')}</div>
+    </div>
+
+    <!-- Actions -->
+    <div class="debate-actions">
+      <button class="debate-action-btn primary" id="debateFullAnalysis">
+        📊 Full Technical Analysis
+      </button>
+      <button class="debate-action-btn" id="debateNewSymbol">
+        🔄 Debate Another Asset
+      </button>
+    </div>
+  `;
+
+  // Animate score bar
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      const fill = document.getElementById('debateScoreFill');
+      if (fill) fill.style.width = bullScore + '%';
+    }, 100);
+  });
+
+  // Button handlers
+  document.getElementById('debateFullAnalysis').addEventListener('click', () => {
+    closeDebate();
+    setInput(`Give me a full technical analysis of ${data.symbol}`);
+    sendMessage();
+  });
+  document.getElementById('debateNewSymbol').addEventListener('click', () => {
+    debateResults.innerHTML = '';
+    debateSymbolEl.value = '';
+    debateSymbolEl.focus();
+  });
+}
