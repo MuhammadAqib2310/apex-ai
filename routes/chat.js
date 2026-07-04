@@ -285,4 +285,57 @@ router.post('/chat', requireAuth, async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// AI Tool Endpoint — for internal features (Scanner, Debate, Sentiment)
+// No conversation saving, higher token limit, raw JSON system prompt
+// POST /api/ai-tool  { prompt }
+// ---------------------------------------------------------------------------
+router.post('/ai-tool', requireAuth, async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
+      return res.status(400).json({ error: 'prompt is required' });
+    }
+    if (!GROQ_API_KEY) {
+      return res.status(500).json({ error: 'Server missing GROQ_API_KEY.' });
+    }
+
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 2000,
+        stream: false,
+        temperature: 0.3,
+        messages: [
+          {
+            role: 'system',
+            content: `You are Apex AI — an expert trading analyst. 
+When asked to return JSON, return ONLY valid raw JSON with no markdown, no code blocks, no explanation. 
+Just the pure JSON object or array starting with { or [.`,
+          },
+          { role: 'user', content: prompt },
+        ],
+      }),
+    });
+
+    if (!groqRes.ok) {
+      const errData = await groqRes.json();
+      return res.status(502).json({ error: errData?.error?.message || 'Upstream API error' });
+    }
+
+    const data = await groqRes.json();
+    const text = data.choices?.[0]?.message?.content || '';
+    res.json({ text });
+
+  } catch (err) {
+    console.error('AI tool endpoint error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;

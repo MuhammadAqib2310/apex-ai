@@ -1500,43 +1500,25 @@ Respond in this EXACT JSON format (no extra text):
 ]`;
 
   try {
-    const res = await fetch(`${API}/chat`, {
+    const res = await fetch(`${API}/ai-tool`, {
       method: 'POST',
       headers: authHeaders(true),
-      body: JSON.stringify({ message: prompt }),
+      body: JSON.stringify({ prompt }),
     });
 
     if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const text = data.text || '';
 
-    const reader  = res.body.getReader();
-    const decoder = new TextDecoder();
-    let fullText  = '';
-    let buffer    = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop();
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith('data: ')) continue;
-        try {
-          const json = JSON.parse(trimmed.slice(6));
-          if (json.type === 'delta') fullText += json.delta;
-        } catch (_) {}
-      }
-    }
-
-    // Parse JSON from AI response
-    const jsonMatch = fullText.match(/\[[\s\S]*\]/);
+    // Extract JSON array from response
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) throw new Error('No JSON in response');
 
     const items = JSON.parse(jsonMatch[0]);
     renderScannerResults(items);
 
   } catch (err) {
+    console.error('Scanner error:', err);
     scannerResults.innerHTML = `<div class="scanner-empty">⚠️ Could not complete scan. Try again.</div>`;
   } finally {
     setLoading(scannerRunBtn, false);
@@ -1714,43 +1696,25 @@ Rules:
 - bias must be Bullish, Bearish, or Neutral`;
 
   try {
-    const res = await fetch(`${API}/chat`, {
+    const res = await fetch(`${API}/ai-tool`, {
       method: 'POST',
       headers: authHeaders(true),
-      body: JSON.stringify({ message: prompt }),
+      body: JSON.stringify({ prompt }),
     });
 
     if (!res.ok) throw new Error('API error');
-
-    const reader  = res.body.getReader();
-    const decoder = new TextDecoder();
-    let fullText  = '';
-    let buffer    = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop();
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith('data: ')) continue;
-        try {
-          const json = JSON.parse(trimmed.slice(6));
-          if (json.type === 'delta') fullText += json.delta;
-        } catch (_) {}
-      }
-    }
+    const data = await res.json();
+    const text = data.text || '';
 
     // Parse JSON
-    const jsonMatch = fullText.match(/\{[\s\S]*\}/);
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON in response');
 
-    const data = JSON.parse(jsonMatch[0]);
-    renderDebateResults(data);
+    const parsed = JSON.parse(jsonMatch[0]);
+    renderDebateResults(parsed);
 
   } catch (err) {
+    console.error('Debate error:', err);
     debateResults.innerHTML = `<div class="scanner-empty">⚠️ Could not generate debate. Please try again.</div>`;
   } finally {
     setLoading(debateRunBtn, false);
@@ -1962,38 +1926,20 @@ Rules:
 - be specific and realistic`;
 
   try {
-    const res = await fetch(`${API}/chat`, {
+    const res = await fetch(`${API}/ai-tool`, {
       method: 'POST',
       headers: authHeaders(true),
-      body: JSON.stringify({ message: prompt }),
+      body: JSON.stringify({ prompt }),
     });
     if (!res.ok) throw new Error('API error');
 
-    const reader  = res.body.getReader();
-    const decoder = new TextDecoder();
-    let fullText  = '';
-    let buffer    = '';
+    const data = await res.json();
+    const text = data.text || '';
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop();
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith('data: ')) continue;
-        try {
-          const json = JSON.parse(trimmed.slice(6));
-          if (json.type === 'delta') fullText += json.delta;
-        } catch (_) {}
-      }
-    }
-
-    const jsonMatch = fullText.match(/\{[\s\S]*\}/);
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON');
-    const data = JSON.parse(jsonMatch[0]);
-    renderSentimentResults(data);
+    const parsed = JSON.parse(jsonMatch[0]);
+    renderSentimentResults(parsed);
 
   } catch (err) {
     sentimentResults.innerHTML = `<div class="scanner-empty">⚠️ Could not analyze sentiment. Please try again.</div>`;
