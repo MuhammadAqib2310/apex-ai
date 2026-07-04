@@ -1270,3 +1270,332 @@ async function openDashboard() {
     dashboardGrid.appendChild(card);
   });
 }
+
+// ---------------------------------------------------------------------------
+// Risk Calculator
+// ---------------------------------------------------------------------------
+const riskModal      = document.getElementById('riskModal');
+const riskCalcBtn    = document.getElementById('riskCalcBtn');
+const riskModalClose = document.getElementById('riskModalClose');
+const riskCalcGo     = document.getElementById('riskCalcGo');
+
+riskCalcBtn.addEventListener('click', () => { openRiskCalc(); closeSidebar(); });
+riskModalClose.addEventListener('click', closeRiskCalc);
+riskModal.addEventListener('click', (e) => { if (e.target === riskModal) closeRiskCalc(); });
+
+function openRiskCalc() {
+  document.getElementById('riskResults').style.display = 'none';
+  hideError(document.getElementById('riskError'));
+  riskModal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  // Escape key support
+  document.addEventListener('keydown', riskCalcEsc);
+}
+function closeRiskCalc() {
+  riskModal.style.display = 'none';
+  document.body.style.overflow = '';
+  document.removeEventListener('keydown', riskCalcEsc);
+}
+function riskCalcEsc(e) {
+  if (e.key === 'Escape') closeRiskCalc();
+}
+
+// Toggle pip value row visibility based on asset type
+document.getElementById('riskAssetType').addEventListener('change', function () {
+  const row = document.getElementById('riskLotValueRow');
+  row.style.display = this.value === 'forex' ? '' : 'none';
+  if (this.value === 'crypto') {
+    document.getElementById('riskPipValue').value = '1';
+  } else if (this.value === 'indices') {
+    document.getElementById('riskPipValue').value = '1';
+  } else {
+    document.getElementById('riskPipValue').value = '10';
+  }
+});
+
+riskCalcGo.addEventListener('click', calculateRisk);
+
+function calculateRisk() {
+  const errEl = document.getElementById('riskError');
+  hideError(errEl);
+
+  const account    = parseFloat(document.getElementById('riskAccount').value);
+  const riskPct    = parseFloat(document.getElementById('riskPercent').value);
+  const entry      = parseFloat(document.getElementById('riskEntry').value);
+  const sl         = parseFloat(document.getElementById('riskSL').value);
+  const tp         = parseFloat(document.getElementById('riskTP').value) || null;
+  const assetType  = document.getElementById('riskAssetType').value;
+  const pipValue   = parseFloat(document.getElementById('riskPipValue').value) || 10;
+
+  // Validate
+  if (!account || account <= 0) { showError(errEl, 'Enter a valid account balance.'); return; }
+  if (!riskPct || riskPct <= 0 || riskPct > 100) { showError(errEl, 'Risk % must be between 0.01 and 100.'); return; }
+  if (!entry || entry <= 0) { showError(errEl, 'Enter a valid entry price.'); return; }
+  if (!sl || sl <= 0)       { showError(errEl, 'Enter a valid stop loss price.'); return; }
+  if (entry === sl)         { showError(errEl, 'Entry and stop loss cannot be the same.'); return; }
+
+  // Core calculations
+  const dollarRisk    = (account * riskPct) / 100;
+  const slDistance    = Math.abs(entry - sl);
+  const direction     = entry > sl ? 'LONG (Buy)' : 'SHORT (Sell)';
+  const slPips        = slDistance;
+
+  let positionSize, lotSize, units;
+  if (assetType === 'forex') {
+    // Standard lot = 100,000 units; pip value per lot = pipValue ($10 default)
+    // pips in price = slDistance * 10000 for 4-decimal pairs, * 100 for JPY
+    const isJPY = entry > 50; // crude check — JPY pairs typically 100+
+    const pipMultiplier = isJPY ? 100 : 10000;
+    const slInPips = slDistance * pipMultiplier;
+    lotSize = dollarRisk / (slInPips * pipValue);
+    units   = lotSize * 100000;
+    positionSize = lotSize.toFixed(4) + ' lots';
+  } else if (assetType === 'crypto') {
+    // units = dollarRisk / slDistance (in price terms)
+    units = dollarRisk / slDistance;
+    positionSize = units.toFixed(6) + ' units';
+    lotSize = units;
+  } else {
+    // indices / CFD: position size in contracts
+    units = dollarRisk / slDistance;
+    positionSize = units.toFixed(4) + ' contracts';
+    lotSize = units;
+  }
+
+  // R:R
+  let rrRatio = null, rewardDollar = null;
+  if (tp) {
+    const reward = Math.abs(tp - entry);
+    rrRatio = (reward / slDistance).toFixed(2);
+    if (assetType === 'forex') {
+      const isJPY = entry > 50;
+      const pipMul = isJPY ? 100 : 10000;
+      rewardDollar = (reward * pipMul * pipValue * lotSize).toFixed(2);
+    } else {
+      rewardDollar = (reward * lotSize).toFixed(2);
+    }
+  }
+
+  // Render results
+  const grid = document.getElementById('riskResultsGrid');
+  grid.innerHTML = '';
+
+  const stats = [
+    { label: 'Dollar Risk',     value: '$' + dollarRisk.toFixed(2),        cls: 'red'    },
+    { label: 'Position Size',   value: positionSize,                        cls: 'violet' },
+    { label: 'SL Distance',     value: slDistance.toFixed(assetType === 'forex' ? 5 : 4), cls: '' },
+    { label: 'Direction',       value: direction,                           cls: entry > sl ? 'green' : 'red' },
+    { label: 'Account Risk',    value: riskPct + '%',                       cls: 'red'    },
+    { label: 'Account Size',    value: '$' + account.toLocaleString(),      cls: ''       },
+  ];
+
+  if (rrRatio) {
+    stats.push({ label: 'Risk : Reward',  value: '1 : ' + rrRatio,           cls: parseFloat(rrRatio) >= 1.5 ? 'green' : 'red' });
+    stats.push({ label: 'Potential Gain', value: '$' + rewardDollar,         cls: 'green' });
+  }
+
+  stats.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'risk-stat';
+    card.innerHTML = `<div class="risk-stat-label">${s.label}</div>
+                      <div class="risk-stat-value ${s.cls}">${s.value}</div>`;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('riskResults').style.display = 'block';
+}
+
+// ---------------------------------------------------------------------------
+// Market Scanner
+// ---------------------------------------------------------------------------
+const scannerModal      = document.getElementById('scannerModal');
+const scannerBtn        = document.getElementById('scannerBtn');
+const scannerModalClose = document.getElementById('scannerModalClose');
+const scannerRunBtn     = document.getElementById('scannerRunBtn');
+const scannerResults    = document.getElementById('scannerResults');
+const scannerStatus     = document.getElementById('scannerStatus');
+const scannerStatusText = document.getElementById('scannerStatusText');
+
+// Toggle scanner chip selection
+document.getElementById('scannerChips').addEventListener('click', (e) => {
+  const chip = e.target.closest('.scan-chip');
+  if (!chip) return;
+  chip.classList.toggle('active');
+});
+
+scannerBtn.addEventListener('click', () => { openScanner(); closeSidebar(); });
+scannerModalClose.addEventListener('click', closeScanner);
+scannerModal.addEventListener('click', (e) => { if (e.target === scannerModal) closeScanner(); });
+
+function openScanner() {
+  scannerModal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  scannerResults.innerHTML = '';
+  scannerStatus.style.display = 'none';
+  document.addEventListener('keydown', scannerEsc);
+}
+function closeScanner() {
+  scannerModal.style.display = 'none';
+  document.body.style.overflow = '';
+  document.removeEventListener('keydown', scannerEsc);
+}
+function scannerEsc(e) {
+  if (e.key === 'Escape') closeScanner();
+}
+
+scannerRunBtn.addEventListener('click', runMarketScan);
+
+async function runMarketScan() {
+  const selectedChips = [...document.querySelectorAll('.scan-chip.active')];
+  if (!selectedChips.length) {
+    scannerResults.innerHTML = '<div class="scanner-empty">Select at least one market to scan.</div>';
+    return;
+  }
+
+  const symbols = selectedChips.map(c => c.dataset.sym);
+  setLoading(scannerRunBtn, true);
+  scannerStatus.style.display = 'flex';
+  scannerStatusText.textContent = `Fetching live prices for ${symbols.length} markets…`;
+  scannerResults.innerHTML = '';
+
+  // Step 1: Fetch live quotes for all selected symbols
+  const quotes = {};
+  await Promise.all(symbols.map(async (sym) => {
+    try {
+      const res = await fetch(`${API}/market/quote?symbol=${encodeURIComponent(sym)}`, { headers: authHeaders() });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.quote) quotes[sym] = data.quote;
+    } catch (_) {}
+  }));
+
+  // Step 2: Ask AI to analyze all symbols together
+  scannerStatusText.textContent = 'AI analyzing setups…';
+
+  const liveBlock = Object.entries(quotes).map(([sym, q]) => {
+    return `${sym}: Price=${q.price}, Change=${q.percentChange}%, High=${q.high}, Low=${q.low}, Open=${q.open}`;
+  }).join('\n');
+
+  const prompt = `You are a market scanner. Analyze these markets and for each one give:
+1. Bias: Bullish / Bearish / Neutral
+2. Setup Quality: Strong / Moderate / Weak / No Setup
+3. Key Level: one price level to watch
+4. One line summary of why
+
+Markets with live data:
+${liveBlock || 'No live data available — use general analysis.'}
+
+Markets to analyze: ${symbols.join(', ')}
+
+Respond in this EXACT JSON format (no extra text):
+[
+  {
+    "symbol": "BTC/USD",
+    "bias": "Bullish",
+    "quality": "Strong",
+    "price": "67500",
+    "keyLevel": "65000",
+    "summary": "Price broke above resistance, momentum strong."
+  }
+]`;
+
+  try {
+    const res = await fetch(`${API}/chat`, {
+      method: 'POST',
+      headers: authHeaders(true),
+      body: JSON.stringify({ message: prompt }),
+    });
+
+    if (!res.ok) throw new Error('API error');
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText  = '';
+    let buffer    = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data: ')) continue;
+        try {
+          const json = JSON.parse(trimmed.slice(6));
+          if (json.type === 'delta') fullText += json.delta;
+        } catch (_) {}
+      }
+    }
+
+    // Parse JSON from AI response
+    const jsonMatch = fullText.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error('No JSON in response');
+
+    const items = JSON.parse(jsonMatch[0]);
+    renderScannerResults(items);
+
+  } catch (err) {
+    scannerResults.innerHTML = `<div class="scanner-empty">⚠️ Could not complete scan. Try again.</div>`;
+  } finally {
+    setLoading(scannerRunBtn, false);
+    scannerStatus.style.display = 'none';
+  }
+}
+
+function renderScannerResults(items) {
+  if (!items || !items.length) {
+    scannerResults.innerHTML = '<div class="scanner-empty">No setups found.</div>';
+    return;
+  }
+
+  // Sort: Strong first, then Moderate, then rest
+  const order = { 'Strong': 0, 'Moderate': 1, 'Weak': 2, 'No Setup': 3 };
+  items.sort((a, b) => (order[a.quality] ?? 4) - (order[b.quality] ?? 4));
+
+  const grid = document.createElement('div');
+  grid.className = 'scanner-results-grid';
+
+  items.forEach(item => {
+    const biasClass = item.bias?.toLowerCase().includes('bull') ? 'bullish'
+                    : item.bias?.toLowerCase().includes('bear') ? 'bearish' : 'neutral';
+
+    const qualityEmoji = item.quality === 'Strong' ? '🔥'
+                       : item.quality === 'Moderate' ? '⚡'
+                       : item.quality === 'Weak' ? '🔹' : '➖';
+
+    const card = document.createElement('div');
+    card.className = `scanner-card ${biasClass}`;
+    card.innerHTML = `
+      <div class="scanner-card-header">
+        <span class="scanner-card-symbol">${item.symbol}</span>
+        <span class="scanner-card-badge ${biasClass}">${item.bias}</span>
+      </div>
+      <div class="scanner-card-price">
+        ${item.price ? 'Price: <strong>' + item.price + '</strong> · ' : ''}
+        ${qualityEmoji} ${item.quality} Setup
+      </div>
+      <div class="scanner-card-summary">${item.summary}</div>
+      <div class="scanner-card-levels">
+        ${item.keyLevel ? `<div class="scanner-level">Key Level: <span>${item.keyLevel}</span></div>` : ''}
+      </div>
+      <div class="scanner-card-actions">
+        <button class="scanner-ask-btn" data-sym="${item.symbol}">
+          💬 Full Analysis
+        </button>
+      </div>
+    `;
+
+    // "Full Analysis" button → opens chat with that symbol
+    card.querySelector('.scanner-ask-btn').addEventListener('click', () => {
+      closeScanner();
+      setInput(`Give me a full technical analysis of ${item.symbol}`);
+      sendMessage();
+    });
+
+    grid.appendChild(card);
+  });
+
+  scannerResults.appendChild(grid);
+}

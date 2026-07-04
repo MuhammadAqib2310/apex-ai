@@ -175,6 +175,14 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         Market Dashboard
       </button>
+      <button class="dashboard-btn" id="riskCalcBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="7" x2="8" y2="7"/></svg>
+        Risk Calculator
+      </button>
+      <button class="dashboard-btn" id="scannerBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        Scan Markets
+      </button>
 
       <h3>Quick Analysis</h3>
       <button class="quick-btn" data-prompt="Give me a full technical analysis of EUR/USD">🇪🇺 EUR/USD</button>
@@ -370,6 +378,113 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ===================== RISK CALCULATOR MODAL ===================== -->
+<div class="profile-modal" id="riskModal" style="display:none;">
+  <div class="profile-modal-inner" style="max-width:480px;">
+    <div class="profile-header">
+      <div class="profile-avatar-lg" style="background:linear-gradient(135deg,#f59e0b,#d97706);font-size:22px;">🧮</div>
+      <div>
+        <div class="profile-name">Risk Calculator</div>
+        <div class="profile-email">Calculate exact position size & risk</div>
+      </div>
+      <button class="chart-close" id="riskModalClose" style="margin-left:auto">✕</button>
+    </div>
+    <div class="ptab-content">
+      <div class="risk-form">
+        <div class="risk-row">
+          <div class="risk-field">
+            <label>Account Balance ($)</label>
+            <input type="number" id="riskAccount" placeholder="e.g. 1000" min="1" step="any" />
+          </div>
+          <div class="risk-field">
+            <label>Risk Per Trade (%)</label>
+            <input type="number" id="riskPercent" placeholder="e.g. 2" min="0.01" max="100" step="any" value="2" />
+          </div>
+        </div>
+        <div class="risk-row">
+          <div class="risk-field">
+            <label>Entry Price</label>
+            <input type="number" id="riskEntry" placeholder="e.g. 1.0850" step="any" />
+          </div>
+          <div class="risk-field">
+            <label>Stop Loss Price</label>
+            <input type="number" id="riskSL" placeholder="e.g. 1.0800" step="any" />
+          </div>
+        </div>
+        <div class="risk-row">
+          <div class="risk-field">
+            <label>Take Profit Price <span style="color:var(--text-dim);font-size:11px;">(optional)</span></label>
+            <input type="number" id="riskTP" placeholder="e.g. 1.0950" step="any" />
+          </div>
+          <div class="risk-field">
+            <label>Asset Type</label>
+            <select id="riskAssetType">
+              <option value="forex">Forex (Standard Lot)</option>
+              <option value="crypto">Crypto / Spot</option>
+              <option value="indices">Indices / CFD</option>
+            </select>
+          </div>
+        </div>
+        <div class="risk-row" id="riskLotValueRow">
+          <div class="risk-field" style="width:100%">
+            <label>Pip/Point Value per Lot ($) <span style="color:var(--text-dim);font-size:11px;">(standard lot = $10 for most forex)</span></label>
+            <input type="number" id="riskPipValue" placeholder="e.g. 10" step="any" value="10" />
+          </div>
+        </div>
+        <button class="primary-btn" id="riskCalcGo" style="margin-top:4px;">Calculate</button>
+        <div id="riskError" class="auth-error" style="margin-top:8px;"></div>
+      </div>
+
+      <!-- Results -->
+      <div id="riskResults" style="display:none;margin-top:18px;">
+        <div class="risk-results-title">📊 Results</div>
+        <div class="risk-results-grid" id="riskResultsGrid"></div>
+        <div class="risk-disclaimer">⚠️ These are estimates. Always verify before placing a trade.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MARKET SCANNER MODAL ===================== -->
+<div class="profile-modal" id="scannerModal" style="display:none;">
+  <div class="profile-modal-inner" style="max-width:700px;max-height:90vh;overflow-y:auto;">
+    <div class="profile-header" style="position:sticky;top:0;z-index:10;background:var(--bg-1);">
+      <div class="profile-avatar-lg" style="background:linear-gradient(135deg,#06b6d4,#0891b2);font-size:22px;">🔍</div>
+      <div>
+        <div class="profile-name">Market Scanner</div>
+        <div class="profile-email">AI scans all major markets for setups</div>
+      </div>
+      <button class="chart-close" id="scannerModalClose" style="margin-left:auto">✕</button>
+    </div>
+    <div class="ptab-content">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+        <div style="flex:1;min-width:200px;">
+          <label style="font-size:12px;color:var(--text-dim);display:block;margin-bottom:6px;">Select Markets to Scan</label>
+          <div class="scanner-chips" id="scannerChips">
+            <button class="scan-chip active" data-sym="BTC/USD">₿ BTC</button>
+            <button class="scan-chip active" data-sym="ETH/USD">⟠ ETH</button>
+            <button class="scan-chip active" data-sym="XAU/USD">🥇 Gold</button>
+            <button class="scan-chip active" data-sym="EUR/USD">🇪🇺 EUR/USD</button>
+            <button class="scan-chip active" data-sym="GBP/USD">🇬🇧 GBP/USD</button>
+            <button class="scan-chip" data-sym="SOL/USD">◎ SOL</button>
+            <button class="scan-chip" data-sym="NDX">📊 NASDAQ</button>
+            <button class="scan-chip" data-sym="XAG/USD">🪙 Silver</button>
+          </div>
+        </div>
+        <button class="primary-btn" id="scannerRunBtn" style="white-space:nowrap;padding:11px 22px;width:auto;">
+          <span class="btn-text">🔍 Scan Now</span>
+          <span class="btn-loader" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span>
+        </button>
+      </div>
+      <div id="scannerStatus" style="display:none;" class="scanner-status-bar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        <span id="scannerStatusText">Fetching live prices…</span>
+      </div>
+      <div id="scannerResults"></div>
+    </div>
   </div>
 </div>
 
