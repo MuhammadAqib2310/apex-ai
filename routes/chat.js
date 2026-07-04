@@ -177,6 +177,9 @@ router.post('/chat', requireAuth, async (req, res) => {
     if (!message || typeof message !== 'string' || !message.trim()) {
       return res.status(400).json({ error: 'message is required' });
     }
+    if (message.length > 8000) {
+      return res.status(400).json({ error: 'Message too long. Please keep it under 8000 characters.' });
+    }
     if (!GROQ_API_KEY) {
       return res.status(500).json({ error: 'Server missing GROQ_API_KEY. Add it to your .env file.' });
     }
@@ -295,6 +298,9 @@ router.post('/ai-tool', requireAuth, async (req, res) => {
     const { prompt } = req.body;
     if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
       return res.status(400).json({ error: 'prompt is required' });
+    }
+    if (prompt.length > 6000) {
+      return res.status(400).json({ error: 'Prompt too long.' });
     }
     if (!GROQ_API_KEY) {
       return res.status(500).json({ error: 'Server missing GROQ_API_KEY.' });

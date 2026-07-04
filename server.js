@@ -32,6 +32,16 @@ const apiLimiter = rateLimit({
 });
 app.use('/api/', apiLimiter);
 
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many AI requests. Please wait a moment.' },
+});
+app.use('/api/chat', aiLimiter);
+app.use('/api/ai-tool', aiLimiter);
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api', chatRoutes);

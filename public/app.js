@@ -300,7 +300,7 @@ async function loadConversations() {
 function renderConversations(list) {
   convListEl.innerHTML = '';
   if (!list.length) {
-    convListEl.innerHTML = '<div class="empty-hint">No conversations yet</div>';
+    convListEl.innerHTML = '<div class="empty-hint" style="text-align:center;padding:16px 4px;"><div style="font-size:22px;margin-bottom:6px;">💬</div><div>No conversations yet</div><div style="font-size:11px;margin-top:3px;color:var(--text-dim)">Ask anything to start</div></div>';
     return;
   }
   list.forEach((c) => {
@@ -481,9 +481,12 @@ async function sendMessage() {
     });
 
     if (!res.ok) {
-      const data = await res.json();
+      let errMsg = 'Something went wrong.';
+      try { const d = await res.json(); errMsg = d.error || errMsg; } catch(_) {}
       streamDiv.remove();
-      addMessage('assistant', `⚠️ Error: ${data.error || 'Something went wrong.'}`);
+      addMessage('assistant', `⚠️ Error: ${errMsg}`);
+      isSending = false;
+      sendBtn.disabled = false;
       return;
     }
 
@@ -1167,10 +1170,25 @@ document.addEventListener('keydown', (e) => {
     inputEl.focus();
   }
 
+  // Ctrl+Q = Logout
+  if (e.ctrlKey && e.key === 'q') {
+    e.preventDefault();
+    if (window.confirm('Log out?')) {
+      clearSession();
+      appScreen.style.display = 'none';
+      authScreen.style.display = 'flex';
+    }
+  }
+
   // Escape = close any open modal
   if (e.key === 'Escape') {
-    if (chartModal.style.display  !== 'none') { chartModal.style.display = 'none'; chartContainer.innerHTML = ''; document.body.style.overflow = ''; }
-    if (profileModal.style.display !== 'none') closeProfile();
+    if (chartModal.style.display    !== 'none') { chartModal.style.display = 'none'; chartContainer.innerHTML = ''; document.body.style.overflow = ''; }
+    if (profileModal.style.display  !== 'none') closeProfile();
+    if (riskModal.style.display     !== 'none') closeRiskCalc();
+    if (scannerModal.style.display  !== 'none') closeScanner();
+    if (debateModal.style.display   !== 'none') closeDebate();
+    if (sentimentModal.style.display !== 'none') closeSentiment();
+    if (dashboardModal.style.display !== 'none') { dashboardModal.style.display = 'none'; document.body.style.overflow = ''; }
   }
 });
 
