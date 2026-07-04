@@ -187,6 +187,10 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         Bull vs Bear Debate
       </button>
+      <button class="dashboard-btn" id="sentimentBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        Sentiment Radar
+      </button>
 
       <h3>Quick Analysis</h3>
       <button class="quick-btn" data-prompt="Give me a full technical analysis of EUR/USD">🇪🇺 EUR/USD</button>
@@ -488,6 +492,54 @@
         <span id="scannerStatusText">Fetching live prices…</span>
       </div>
       <div id="scannerResults"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SENTIMENT RADAR MODAL ===================== -->
+<div class="profile-modal" id="sentimentModal" style="display:none;">
+  <div class="profile-modal-inner" style="max-width:700px;max-height:92vh;overflow-y:auto;">
+
+    <div class="profile-header" style="position:sticky;top:0;z-index:10;background:var(--bg-1);">
+      <div class="profile-avatar-lg" style="background:linear-gradient(135deg,#f59e0b,#d97706);font-size:22px;">📡</div>
+      <div>
+        <div class="profile-name">Sentiment Radar</div>
+        <div class="profile-email">Live market mood based on news & AI analysis</div>
+      </div>
+      <button class="chart-close" id="sentimentModalClose" style="margin-left:auto">✕</button>
+    </div>
+
+    <div class="ptab-content">
+      <!-- Asset selector -->
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px;">
+        <div style="flex:1;min-width:180px;">
+          <label style="font-size:12px;color:var(--text-dim);display:block;margin-bottom:6px;">Check Sentiment For</label>
+          <input type="text" id="sentimentSymbol" placeholder="e.g. BTC, Gold, EUR/USD, NASDAQ" class="debate-input" />
+        </div>
+        <button class="primary-btn" id="sentimentRunBtn" style="width:auto;padding:11px 22px;white-space:nowrap;background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 20px rgba(245,158,11,0.35);">
+          <span class="btn-text">📡 Scan Sentiment</span>
+          <span class="btn-loader" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span>
+        </button>
+      </div>
+      <!-- Quick chips -->
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;">
+        <button class="chip sentiment-quick" data-sym="Bitcoin BTC">₿ BTC</button>
+        <button class="chip sentiment-quick" data-sym="Ethereum ETH">⟠ ETH</button>
+        <button class="chip sentiment-quick" data-sym="Gold XAU">🥇 Gold</button>
+        <button class="chip sentiment-quick" data-sym="EUR/USD Forex">🇪🇺 EUR/USD</button>
+        <button class="chip sentiment-quick" data-sym="NASDAQ stock market">📊 NASDAQ</button>
+        <button class="chip sentiment-quick" data-sym="Solana SOL crypto">◎ SOL</button>
+        <button class="chip sentiment-quick" data-sym="US Dollar DXY">💵 USD</button>
+      </div>
+
+      <!-- Status -->
+      <div id="sentimentStatus" style="display:none;" class="scanner-status-bar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        <span id="sentimentStatusText">Analyzing sentiment…</span>
+      </div>
+
+      <!-- Results -->
+      <div id="sentimentResults"></div>
     </div>
   </div>
 </div>

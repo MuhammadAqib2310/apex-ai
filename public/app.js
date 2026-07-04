@@ -1853,3 +1853,288 @@ function renderDebateResults(data) {
     debateSymbolEl.focus();
   });
 }
+
+// ---------------------------------------------------------------------------
+// Sentiment Radar
+// ---------------------------------------------------------------------------
+const sentimentModal      = document.getElementById('sentimentModal');
+const sentimentBtn        = document.getElementById('sentimentBtn');
+const sentimentModalClose = document.getElementById('sentimentModalClose');
+const sentimentRunBtn     = document.getElementById('sentimentRunBtn');
+const sentimentResults    = document.getElementById('sentimentResults');
+const sentimentStatus     = document.getElementById('sentimentStatus');
+const sentimentStatusText = document.getElementById('sentimentStatusText');
+const sentimentSymbolEl   = document.getElementById('sentimentSymbol');
+
+// Quick chip selection
+document.querySelectorAll('.sentiment-quick').forEach(btn => {
+  btn.addEventListener('click', () => {
+    sentimentSymbolEl.value = btn.dataset.sym;
+    sentimentSymbolEl.focus();
+  });
+});
+
+sentimentBtn.addEventListener('click', () => { openSentiment(); closeSidebar(); });
+sentimentModalClose.addEventListener('click', closeSentiment);
+sentimentModal.addEventListener('click', (e) => { if (e.target === sentimentModal) closeSentiment(); });
+sentimentSymbolEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSentiment(); });
+
+function openSentiment() {
+  sentimentModal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  sentimentResults.innerHTML = '';
+  sentimentStatus.style.display = 'none';
+  sentimentSymbolEl.value = '';
+  setTimeout(() => sentimentSymbolEl.focus(), 100);
+  document.addEventListener('keydown', sentimentEsc);
+}
+function closeSentiment() {
+  sentimentModal.style.display = 'none';
+  document.body.style.overflow = '';
+  document.removeEventListener('keydown', sentimentEsc);
+}
+function sentimentEsc(e) { if (e.key === 'Escape') closeSentiment(); }
+
+sentimentRunBtn.addEventListener('click', runSentiment);
+
+async function runSentiment() {
+  const sym = sentimentSymbolEl.value.trim();
+  if (!sym) {
+    sentimentSymbolEl.focus();
+    sentimentSymbolEl.style.borderColor = 'var(--red)';
+    setTimeout(() => { sentimentSymbolEl.style.borderColor = ''; }, 1500);
+    return;
+  }
+
+  setLoading(sentimentRunBtn, true);
+  sentimentStatus.style.display = 'flex';
+  sentimentStatusText.textContent = `Fetching live price for ${sym}…`;
+  sentimentResults.innerHTML = '';
+
+  // Fetch live quote
+  let liveBlock = '';
+  try {
+    const res = await fetch(`${API}/market/quote?symbol=${encodeURIComponent(sym)}`, { headers: authHeaders() });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.quote?.price) {
+        const q = data.quote;
+        liveBlock = `\n[LIVE DATA] ${sym}: Price=${q.price}, Change=${q.percentChange}%, High=${q.high}, Low=${q.low}, Open=${q.open}, PrevClose=${q.previousClose}`;
+      }
+    }
+  } catch (_) {}
+
+  sentimentStatusText.textContent = 'AI analyzing market sentiment…';
+
+  const prompt = `You are a market sentiment analyst. Analyze the current market sentiment for: ${sym}
+${liveBlock}
+
+Based on current market conditions, news trends, technical picture, and macro factors, generate a COMPLETE sentiment report.
+
+Respond in EXACTLY this JSON format (no other text):
+{
+  "symbol": "${sym}",
+  "score": 68,
+  "mood": "Greed",
+  "overall": "Bullish",
+  "signals": [
+    { "name": "Price Action",    "value": "Bullish",  "detail": "Trading above all major EMAs" },
+    { "name": "Momentum",        "value": "Bullish",  "detail": "RSI 62 — strong momentum zone" },
+    { "name": "Market Mood",     "value": "Greed",    "detail": "Fear & Greed elevated" },
+    { "name": "Volume",          "value": "Neutral",  "detail": "Average volume, no strong push" },
+    { "name": "Macro Outlook",   "value": "Bearish",  "detail": "Fed hawkish, USD strength concern" },
+    { "name": "Whale Activity",  "value": "Bullish",  "detail": "Large accumulation on dips" }
+  ],
+  "drivers": [
+    { "type": "positive", "text": "Institutional buying detected at key support — strong accumulation zone" },
+    { "type": "positive", "text": "Technical breakout above major resistance with follow-through volume" },
+    { "type": "negative", "text": "Macro headwinds: rising interest rates pressuring risk assets" },
+    { "type": "info",     "text": "Key event this week: Fed meeting — volatility expected Thursday" }
+  ],
+  "summary": "Two to three sentence overall sentiment summary with actionable context for traders."
+}
+
+Rules:
+- score: 0 (Extreme Fear) to 100 (Extreme Greed). 0-25=Extreme Fear, 26-45=Fear, 46-55=Neutral, 56-75=Greed, 76-100=Extreme Greed
+- overall must be: Bullish, Bearish, or Neutral
+- mood must be: Extreme Fear, Fear, Neutral, Greed, or Extreme Greed
+- provide exactly 6 signals and 4 drivers
+- be specific and realistic`;
+
+  try {
+    const res = await fetch(`${API}/chat`, {
+      method: 'POST',
+      headers: authHeaders(true),
+      body: JSON.stringify({ message: prompt }),
+    });
+    if (!res.ok) throw new Error('API error');
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText  = '';
+    let buffer    = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data: ')) continue;
+        try {
+          const json = JSON.parse(trimmed.slice(6));
+          if (json.type === 'delta') fullText += json.delta;
+        } catch (_) {}
+      }
+    }
+
+    const jsonMatch = fullText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON');
+    const data = JSON.parse(jsonMatch[0]);
+    renderSentimentResults(data);
+
+  } catch (err) {
+    sentimentResults.innerHTML = `<div class="scanner-empty">⚠️ Could not analyze sentiment. Please try again.</div>`;
+  } finally {
+    setLoading(sentimentRunBtn, false);
+    sentimentStatus.style.display = 'none';
+  }
+}
+
+function renderSentimentResults(data) {
+  const score   = Math.min(100, Math.max(0, data.score || 50));
+  const overall = data.overall || 'Neutral';
+  const mood    = data.mood    || 'Neutral';
+
+  // Color based on score
+  const scoreColor = score >= 76 ? '#10b981'
+                   : score >= 56 ? '#22c55e'
+                   : score >= 46 ? '#f59e0b'
+                   : score >= 26 ? '#f97316'
+                   : '#ef4444';
+
+  const overallClass = overall.toLowerCase().includes('bull') ? 'bullish'
+                     : overall.toLowerCase().includes('bear') ? 'bearish' : 'neutral';
+  const moodClass    = mood.toLowerCase().includes('greed') ? (mood.toLowerCase().includes('extreme') ? 'greed' : 'greed')
+                     : mood.toLowerCase().includes('fear')  ? (mood.toLowerCase().includes('extreme') ? 'fear' : 'fear')
+                     : 'neutral';
+
+  // Gauge arc: 0–100 maps to 180 degrees
+  const angle     = (score / 100) * 180; // degrees
+  const rad       = (angle - 180) * Math.PI / 180;
+  const cx = 100, cy = 100, r = 80;
+  const needleX   = cx + r * Math.cos(rad);
+  const needleY   = cy + r * Math.sin(rad);
+
+  // Arc gradient stops
+  const arcPath = `M 20 100 A 80 80 0 0 1 180 100`;
+
+  const signals = (data.signals || []).slice(0, 6);
+  const drivers = (data.drivers || []).slice(0, 4);
+
+  sentimentResults.innerHTML = `
+    <!-- Gauge Meter -->
+    <div class="sentiment-meter-wrap">
+      <div class="sentiment-meter-label">Market Sentiment Score</div>
+      <div class="sentiment-arc-wrap">
+        <svg width="200" height="110" viewBox="0 0 200 110">
+          <!-- Background arc -->
+          <path d="${arcPath}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="14" stroke-linecap="round"/>
+          <!-- Colored arc (fear=red → neutral=yellow → greed=green) -->
+          <defs>
+            <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#ef4444"/>
+              <stop offset="25%"  stop-color="#f97316"/>
+              <stop offset="50%"  stop-color="#f59e0b"/>
+              <stop offset="75%"  stop-color="#22c55e"/>
+              <stop offset="100%" stop-color="#10b981"/>
+            </linearGradient>
+          </defs>
+          <path d="${arcPath}" fill="none" stroke="url(#arcGrad)" stroke-width="14" stroke-linecap="round"
+                stroke-dasharray="251.2" stroke-dashoffset="${251.2 - (score / 100) * 251.2}"/>
+          <!-- Needle -->
+          <line x1="${cx}" y1="${cy}" x2="${needleX.toFixed(1)}" y2="${needleY.toFixed(1)}"
+                stroke="${scoreColor}" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="${cx}" cy="${cy}" r="5" fill="${scoreColor}"/>
+          <!-- Labels -->
+          <text x="16"  y="118" font-size="9" fill="#ef4444"  font-family="sans-serif">Fear</text>
+          <text x="160" y="118" font-size="9" fill="#10b981" font-family="sans-serif">Greed</text>
+        </svg>
+        <div class="sentiment-score-center">
+          <div class="sentiment-score-num" style="color:${scoreColor}">${score}</div>
+          <div class="sentiment-score-label" style="color:${scoreColor}">${mood}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Badges -->
+    <div class="sentiment-badges">
+      <span class="sentiment-badge ${overallClass}">${overall === 'Bullish' ? '🐂' : overall === 'Bearish' ? '🐻' : '⚖️'} ${overall}</span>
+      <span class="sentiment-badge ${moodClass}">${score >= 56 ? '😄' : score >= 46 ? '😐' : '😨'} ${mood}</span>
+    </div>
+
+    <!-- Signals grid -->
+    <div class="sentiment-signals">
+      ${signals.map(s => {
+        const cls = s.value?.toLowerCase().includes('bull') || s.value?.toLowerCase().includes('greed') ? 'bullish'
+                  : s.value?.toLowerCase().includes('bear') || s.value?.toLowerCase().includes('fear') ? 'bearish' : 'neutral';
+        return `<div class="sentiment-signal">
+          <div class="sentiment-signal-name">${escapeHtml(s.name)}</div>
+          <div class="sentiment-signal-value ${cls}">${escapeHtml(s.value)}</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:3px;">${escapeHtml(s.detail || '')}</div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- Key Drivers -->
+    <div class="sentiment-summary-title" style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-dim);font-weight:700;margin-bottom:8px;">📰 Key Market Drivers</div>
+    <div class="sentiment-drivers">
+      ${drivers.map(d => {
+        const icon = d.type === 'positive' ? '✅' : d.type === 'negative' ? '🔴' : 'ℹ️';
+        return `<div class="sentiment-driver ${d.type}">
+          <span class="sentiment-driver-icon">${icon}</span>
+          <span>${escapeHtml(d.text)}</span>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- Summary -->
+    <div class="sentiment-summary">
+      <div class="sentiment-summary-title">🧠 AI Summary</div>
+      <div class="sentiment-summary-text">${escapeHtml(data.summary || '')}</div>
+    </div>
+
+    <!-- Actions -->
+    <div class="sentiment-action-row">
+      <button class="sentiment-action-btn primary" id="sentimentFullAnalysis">
+        📊 Full Technical Analysis
+      </button>
+      <button class="sentiment-action-btn" id="sentimentDebate">
+        🐂🐻 Bull vs Bear Debate
+      </button>
+      <button class="sentiment-action-btn" id="sentimentNewSymbol">
+        🔄 Check Another
+      </button>
+    </div>
+  `;
+
+  // Action buttons
+  document.getElementById('sentimentFullAnalysis').addEventListener('click', () => {
+    closeSentiment();
+    setInput(`Give me a full technical analysis of ${data.symbol}`);
+    sendMessage();
+  });
+  document.getElementById('sentimentDebate').addEventListener('click', () => {
+    closeSentiment();
+    debateSymbolEl.value = data.symbol;
+    openDebate();
+    runDebate();
+  });
+  document.getElementById('sentimentNewSymbol').addEventListener('click', () => {
+    sentimentResults.innerHTML = '';
+    sentimentSymbolEl.value = '';
+    sentimentSymbolEl.focus();
+  });
+}

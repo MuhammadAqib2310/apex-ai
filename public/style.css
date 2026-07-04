@@ -1244,3 +1244,125 @@ body.light .debate-input { background: rgba(0,0,0,0.04); color: var(--text); }
   border-color: transparent; color: #fff;
 }
 .debate-action-btn.primary:hover { opacity: .9; }
+
+/* ============================================================
+   SENTIMENT RADAR
+   ============================================================ */
+.sentiment-meter-wrap {
+  text-align: center;
+  margin: 8px 0 20px;
+}
+.sentiment-meter-label {
+  font-size: 12px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.8px;
+  font-weight: 700; margin-bottom: 12px;
+}
+.sentiment-arc-wrap {
+  position: relative;
+  width: 200px; height: 110px;
+  margin: 0 auto 8px;
+}
+.sentiment-arc-wrap svg { overflow: visible; }
+.sentiment-score-center {
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+.sentiment-score-num {
+  font-size: 36px; font-weight: 900;
+  line-height: 1;
+}
+.sentiment-score-label {
+  font-size: 13px; font-weight: 700;
+  margin-top: 2px;
+}
+
+.sentiment-badges {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+.sentiment-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 700;
+  padding: 5px 13px; border-radius: 999px;
+}
+.sentiment-badge.bullish  { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+.sentiment-badge.bearish  { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(239,68,68,0.3); }
+.sentiment-badge.neutral  { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+.sentiment-badge.fear     { background: rgba(239,68,68,0.1);   color: #f97316; border: 1px solid rgba(249,115,22,0.3); }
+.sentiment-badge.greed    { background: rgba(34,197,94,0.1);   color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+
+.sentiment-signals {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.sentiment-signal {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.sentiment-signal-name  { font-size: 11px; color: var(--text-dim); margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.sentiment-signal-value { font-size: 16px; font-weight: 700; }
+.sentiment-signal-value.bullish { color: var(--green); }
+.sentiment-signal-value.bearish { color: var(--red); }
+.sentiment-signal-value.neutral { color: #f59e0b; }
+
+.sentiment-summary {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.sentiment-summary-title {
+  font-size: 12px; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--text-dim);
+  font-weight: 700; margin-bottom: 8px;
+}
+.sentiment-summary-text {
+  font-size: 13.5px; color: var(--text-mid);
+  line-height: 1.65;
+}
+
+.sentiment-drivers {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-bottom: 16px;
+}
+.sentiment-driver {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px; color: var(--text-mid);
+  line-height: 1.5;
+}
+.sentiment-driver-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.sentiment-driver.positive { border-left: 3px solid var(--green); }
+.sentiment-driver.negative { border-left: 3px solid var(--red); }
+.sentiment-driver.info     { border-left: 3px solid #f59e0b; }
+
+.sentiment-action-row {
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.sentiment-action-btn {
+  flex: 1; min-width: 130px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .15s;
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  color: var(--text-mid);
+}
+.sentiment-action-btn:hover { border-color: var(--violet); color: var(--violet-2); background: rgba(139,92,246,0.1); }
+.sentiment-action-btn.primary {
+  background: linear-gradient(135deg, var(--violet), var(--violet-dark));
+  border-color: transparent; color: #fff;
+}
+.sentiment-action-btn.primary:hover { opacity: .9; }
