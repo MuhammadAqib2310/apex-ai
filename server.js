@@ -14,6 +14,7 @@ const rateLimit = require('express-rate-limit');
 const authRoutes = require('./routes/auth');
 const chatRoutes = require('./routes/chat');
 const marketRoutes = require('./routes/market');
+const journalRoutes = require('./routes/journal');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -46,6 +47,7 @@ app.use('/api/ai-tool', aiLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api', chatRoutes);
 app.use('/api/market', marketRoutes);
+app.use('/api/journal', journalRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({

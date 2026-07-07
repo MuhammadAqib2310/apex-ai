@@ -2102,3 +2102,410 @@ function renderSentimentResults(data) {
     sentimentSymbolEl.focus();
   });
 }
+
+// ===========================================================================
+// TRADING JOURNAL
+// ===========================================================================
+const journalModal      = document.getElementById('journalModal');
+const journalBtn        = document.getElementById('journalBtn');
+const journalModalClose = document.getElementById('journalModalClose');
+
+journalBtn.addEventListener('click', () => { openJournal(); closeSidebar(); });
+journalModalClose.addEventListener('click', closeJournal);
+journalModal.addEventListener('click', e => { if (e.target === journalModal) closeJournal(); });
+
+function openJournal() {
+  journalModal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  document.getElementById('jtDate').value = new Date().toISOString().split('T')[0];
+  switchJTab('log');
+  loadJournalHistory();
+  loadJournalStats();
+}
+function closeJournal() {
+  journalModal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function switchJTab(tab) {
+  ['log','history','stats'].forEach(t => {
+    const btn = document.getElementById('jtab' + t.charAt(0).toUpperCase() + t.slice(1));
+    const content = document.getElementById('jTab' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (btn) btn.classList.toggle('active', t === tab);
+    if (content) content.style.display = t === tab ? 'block' : 'none';
+  });
+}
+
+// Save trade
+document.getElementById('jtSaveBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('jtSaveBtn');
+  const errEl = document.getElementById('jtError');
+  hideError(errEl);
+
+  const symbol = document.getElementById('jtSymbol').value.trim();
+  const entry  = document.getElementById('jtEntry').value;
+  if (!symbol || !entry) { showError(errEl, 'Symbol and Entry Price are required.'); return; }
+
+  setLoading(btn, true);
+  try {
+    const res = await fetch(`${API}/journal/trades`, {
+      method: 'POST',
+      headers: authHeaders(true),
+      body: JSON.stringify({
+        symbol,
+        direction:  document.getElementById('jtDirection').value,
+        entryPrice: entry,
+        exitPrice:  document.getElementById('jtExit').value  || null,
+        stopLoss:   document.getElementById('jtSL').value    || null,
+        takeProfit: document.getElementById('jtTP').value    || null,
+        lotSize:    document.getElementById('jtLot').value   || 1,
+        result:     document.getElementById('jtResult').value,
+        pnl:        document.getElementById('jtPnl').value   || null,
+        notes:      document.getElementById('jtNotes').value,
+        date:       document.getElementById('jtDate').value,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to save');
+
+    // Reset form
+    ['jtSymbol','jtEntry','jtExit','jtSL','jtTP','jtPnl','jtNotes'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('jtResult').value = 'open';
+    document.getElementById('jtDate').value = new Date().toISOString().split('T')[0];
+
+    // Switch to history and reload
+    switchJTab('history');
+    loadJournalHistory();
+    loadJournalStats();
+  } catch (err) {
+    showError(errEl, err.message);
+  } finally {
+    setLoading(btn, false);
+  }
+});
+
+async function loadJournalHistory() {
+  const el = document.getElementById('jtHistoryList');
+  el.innerHTML = '<div class="scanner-empty">Loading…</div>';
+  try {
+    const res  = await fetch(`${API}/journal/trades`, { headers: authHeaders() });
+    const data = await res.json();
+    const trades = data.trades || [];
+    if (!trades.length) { el.innerHTML = '<div class="scanner-empty">📒 No trades logged yet.<br><small>Switch to "Log Trade" to add your first trade.</small></div>'; return; }
+
+    el.innerHTML = trades.map(t => {
+      const pnlVal = t.pnl !== null ? parseFloat(t.pnl) : null;
+      const pnlStr = pnlVal !== null ? `${pnlVal >= 0 ? '+' : ''}$${pnlVal.toFixed(2)}` : '—';
+      const pnlCls = pnlVal === null ? '' : pnlVal >= 0 ? 'pos' : 'neg';
+      const dateStr = t.date ? new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+      return `<div class="jt-trade-card">
+        <span class="jt-trade-badge ${t.result}">${t.result === 'win' ? '✅' : t.result === 'loss' ? '❌' : t.result === 'breakeven' ? '⚖️' : '🔵'} ${t.result}</span>
+        <div style="flex:1;min-width:0;">
+          <div class="jt-trade-sym">${escapeHtml(t.symbol)} <span class="jt-trade-dir">${t.direction?.toUpperCase()}</span></div>
+          <div style="font-size:11px;color:var(--text-dim);">Entry: ${t.entryPrice} ${t.exitPrice ? '→ Exit: ' + t.exitPrice : ''} ${dateStr ? '· ' + dateStr : ''}</div>
+          ${t.notes ? `<div style="font-size:11px;color:var(--text-dim);margin-top:2px;">${escapeHtml(t.notes.slice(0,60))}${t.notes.length>60?'…':''}</div>` : ''}
+        </div>
+        <div class="jt-trade-pnl ${pnlCls}">${pnlStr}</div>
+        <button class="jt-trade-del" onclick="deleteTrade(${t.id})" title="Delete">🗑</button>
+      </div>`;
+    }).join('');
+  } catch (_) {
+    el.innerHTML = '<div class="scanner-empty">Failed to load trades.</div>';
+  }
+}
+
+async function deleteTrade(id) {
+  if (!confirm('Delete this trade?')) return;
+  await fetch(`${API}/journal/trades/${id}`, { method: 'DELETE', headers: authHeaders() });
+  loadJournalHistory();
+  loadJournalStats();
+}
+
+async function loadJournalStats() {
+  const el = document.getElementById('jtStatsContent');
+  el.innerHTML = '<div class="scanner-empty">Loading…</div>';
+  try {
+    const res  = await fetch(`${API}/journal/stats`, { headers: authHeaders() });
+    const data = await res.json();
+    const s = data.stats;
+    if (!s || s.total === 0) { el.innerHTML = '<div class="scanner-empty">📊 Log some completed trades to see your stats.</div>'; return; }
+
+    const pnlNum = parseFloat(s.totalPnl);
+    const pnlCls = pnlNum >= 0 ? 'green' : 'red';
+
+    el.innerHTML = `
+      <div class="jt-stat-grid">
+        <div class="jt-stat-card"><div class="jt-stat-label">Win Rate</div><div class="jt-stat-val ${parseFloat(s.winRate)>=50?'green':'red'}">${s.winRate}%</div></div>
+        <div class="jt-stat-card"><div class="jt-stat-label">Total P&L</div><div class="jt-stat-val ${pnlCls}">${pnlNum>=0?'+':''}$${pnlNum.toFixed(2)}</div></div>
+        <div class="jt-stat-card"><div class="jt-stat-label">Total Trades</div><div class="jt-stat-val violet">${s.total}</div></div>
+        <div class="jt-stat-card"><div class="jt-stat-label">Wins / Losses</div><div class="jt-stat-val">${s.wins} / ${s.losses}</div></div>
+        <div class="jt-stat-card"><div class="jt-stat-label">Avg Win</div><div class="jt-stat-val green">+$${parseFloat(s.avgWin||0).toFixed(2)}</div></div>
+        <div class="jt-stat-card"><div class="jt-stat-label">Avg Loss</div><div class="jt-stat-val red">$${parseFloat(s.avgLoss||0).toFixed(2)}</div></div>
+      </div>
+      ${s.bestTrade ? `<div class="scanner-empty" style="background:var(--green-dim);border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:10px 14px;text-align:left;color:var(--text-mid);font-size:13px;">🏆 <strong>Best Trade:</strong> ${s.bestTrade.symbol} ${s.bestTrade.direction?.toUpperCase()} — <span style="color:var(--green)">+$${parseFloat(s.bestTrade.pnl||0).toFixed(2)}</span></div>` : ''}
+      ${s.worstTrade ? `<div class="scanner-empty" style="background:var(--red-dim);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:10px 14px;text-align:left;color:var(--text-mid);font-size:13px;margin-top:8px;">💸 <strong>Worst Trade:</strong> ${s.worstTrade.symbol} ${s.worstTrade.direction?.toUpperCase()} — <span style="color:var(--red)">$${parseFloat(s.worstTrade.pnl||0).toFixed(2)}</span></div>` : ''}
+      <div style="margin-top:16px;text-align:center;">
+        <button class="primary-btn" style="background:linear-gradient(135deg,#10b981,#059669);display:inline-flex;gap:8px;padding:10px 20px;width:auto;" onclick="closeJournal();openCoach();">
+          🧑‍🏫 Get AI Coaching Based on These Stats
+        </button>
+      </div>`;
+  } catch (_) {
+    el.innerHTML = '<div class="scanner-empty">Failed to load stats.</div>';
+  }
+}
+
+// ===========================================================================
+// PRICE ALERTS
+// ===========================================================================
+const alertsModal      = document.getElementById('alertsModal');
+const alertsBtn        = document.getElementById('alertsBtn');
+const alertsModalClose = document.getElementById('alertsModalClose');
+
+alertsBtn.addEventListener('click', () => { openAlerts(); closeSidebar(); });
+alertsModalClose.addEventListener('click', closeAlerts);
+alertsModal.addEventListener('click', e => { if (e.target === alertsModal) closeAlerts(); });
+
+function openAlerts() {
+  alertsModal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  loadAlerts();
+}
+function closeAlerts() {
+  alertsModal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.getElementById('alSaveBtn').addEventListener('click', async () => {
+  const btn   = document.getElementById('alSaveBtn');
+  const errEl = document.getElementById('alError');
+  hideError(errEl);
+
+  const symbol      = document.getElementById('alSymbol').value.trim();
+  const targetPrice = document.getElementById('alTarget').value;
+  const condition   = document.getElementById('alCondition').value;
+  const note        = document.getElementById('alNote').value.trim();
+
+  if (!symbol || !targetPrice) { showError(errEl, 'Symbol and Target Price are required.'); return; }
+
+  setLoading(btn, true);
+  try {
+    const res  = await fetch(`${API}/journal/alerts`, {
+      method: 'POST',
+      headers: authHeaders(true),
+      body: JSON.stringify({ symbol, targetPrice, condition, note }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to set alert');
+
+    document.getElementById('alSymbol').value = '';
+    document.getElementById('alTarget').value = '';
+    document.getElementById('alNote').value   = '';
+    loadAlerts();
+  } catch (err) {
+    showError(errEl, err.message);
+  } finally {
+    setLoading(btn, false);
+  }
+});
+
+async function loadAlerts() {
+  const el = document.getElementById('alList');
+  try {
+    const res  = await fetch(`${API}/journal/alerts`, { headers: authHeaders() });
+    const data = await res.json();
+    const active = (data.alerts || []).filter(a => !a.triggered);
+
+    if (!active.length) {
+      el.innerHTML = '<div class="scanner-empty">No active alerts. Set one above ☝️</div>';
+      return;
+    }
+
+    el.innerHTML = active.map(a => `
+      <div class="al-card" id="al-${a.id}">
+        <span style="font-size:18px;">${a.condition === 'above' ? '📈' : '📉'}</span>
+        <div style="flex:1">
+          <div class="al-card-sym">${escapeHtml(a.symbol)}</div>
+          <div class="al-card-cond">${a.condition === 'above' ? 'Price goes above' : 'Price drops below'} <strong class="al-card-price">$${parseFloat(a.targetPrice).toLocaleString()}</strong></div>
+          ${a.note ? `<div style="font-size:11px;color:var(--text-dim);margin-top:2px;">${escapeHtml(a.note)}</div>` : ''}
+        </div>
+        <button class="al-card-del" onclick="deleteAlert(${a.id})" title="Delete">🗑</button>
+      </div>`).join('');
+  } catch (_) {
+    el.innerHTML = '<div class="scanner-empty">Failed to load alerts.</div>';
+  }
+}
+
+async function deleteAlert(id) {
+  await fetch(`${API}/journal/alerts/${id}`, { method: 'DELETE', headers: authHeaders() });
+  loadAlerts();
+}
+
+// Background alert polling — every 60 seconds when logged in
+let alertPollInterval = null;
+
+function startAlertPolling() {
+  if (alertPollInterval) return;
+  checkAlerts(); // immediate check
+  alertPollInterval = setInterval(checkAlerts, 60000);
+}
+
+function stopAlertPolling() {
+  if (alertPollInterval) { clearInterval(alertPollInterval); alertPollInterval = null; }
+}
+
+async function checkAlerts() {
+  if (!token) return;
+  try {
+    const res  = await fetch(`${API}/journal/alerts/check`, { method: 'POST', headers: authHeaders(true), body: '{}' });
+    if (!res.ok) return;
+    const data = await res.json();
+    (data.triggered || []).forEach(alert => showAlertToast(alert));
+  } catch (_) {}
+}
+
+function showAlertToast(alert) {
+  const toast = document.createElement('div');
+  toast.className = 'alert-toast';
+  toast.innerHTML = `
+    <span class="alert-toast-icon">🔔</span>
+    <div>
+      <div class="alert-toast-title">Price Alert Triggered!</div>
+      <div class="alert-toast-body">
+        <strong>${escapeHtml(alert.symbol)}</strong> is now 
+        ${alert.condition === 'above' ? 'above' : 'below'} 
+        $${parseFloat(alert.targetPrice).toLocaleString()} 
+        — Current: $${parseFloat(alert.currentPrice).toLocaleString()}
+      </div>
+      ${alert.note ? `<div style="font-size:11px;color:var(--text-dim);margin-top:3px;">${escapeHtml(alert.note)}</div>` : ''}
+    </div>
+    <button class="alert-toast-close" onclick="this.closest('.alert-toast').remove()">✕</button>
+  `;
+  document.body.appendChild(toast);
+  // Request browser notification if allowed
+  if (Notification.permission === 'granted') {
+    new Notification(`🔔 ${alert.symbol} Alert!`, {
+      body: `Price ${alert.condition === 'above' ? 'above' : 'below'} $${parseFloat(alert.targetPrice).toLocaleString()} — Now: $${parseFloat(alert.currentPrice).toLocaleString()}`,
+    });
+  }
+  // Auto-dismiss after 8 seconds
+  setTimeout(() => { if (toast.parentNode) toast.remove(); }, 8000);
+}
+
+// Request notification permission on app load
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+// ===========================================================================
+// AI COACH
+// ===========================================================================
+const coachModal      = document.getElementById('coachModal');
+const coachBtn        = document.getElementById('coachBtn');
+const coachModalClose = document.getElementById('coachModalClose');
+const coachRunBtn     = document.getElementById('coachRunBtn');
+const coachResults    = document.getElementById('coachResults');
+const coachStatus     = document.getElementById('coachStatus');
+
+coachBtn.addEventListener('click', () => { openCoach(); closeSidebar(); });
+coachModalClose.addEventListener('click', closeCoach);
+coachModal.addEventListener('click', e => { if (e.target === coachModal) closeCoach(); });
+coachRunBtn.addEventListener('click', runCoach);
+
+function openCoach() {
+  coachModal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeCoach() {
+  coachModal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+async function runCoach() {
+  setLoading(coachRunBtn, true);
+  coachStatus.style.display = 'flex';
+  coachResults.innerHTML = '';
+
+  try {
+    const res  = await fetch(`${API}/journal/coach`, { method: 'POST', headers: authHeaders(true), body: '{}' });
+    const data = await res.json();
+
+    if (data.advice) {
+      coachResults.innerHTML = `<div class="coach-summary">${escapeHtml(data.advice)}</div>`;
+      return;
+    }
+
+    const c = data.coaching;
+    if (!c) throw new Error('No coaching data');
+
+    coachResults.innerHTML = `
+      <!-- Grade -->
+      <div class="coach-grade">
+        <div class="coach-grade-val">${escapeHtml(c.grade || 'B')}</div>
+        <div class="coach-grade-label">Your Trading Grade</div>
+      </div>
+
+      <!-- Summary -->
+      <div class="coach-summary">${escapeHtml(c.summary || '')}</div>
+
+      <!-- Strengths -->
+      ${c.strengths?.length ? `
+        <div class="coach-section-title">✅ Strengths</div>
+        <div class="coach-list">
+          ${c.strengths.map(s => `<div class="coach-item"><span class="coach-item-icon">💪</span><span>${escapeHtml(s)}</span></div>`).join('')}
+        </div>` : ''}
+
+      <!-- Weaknesses -->
+      ${c.weaknesses?.length ? `
+        <div class="coach-section-title">⚠️ Areas to Improve</div>
+        <div class="coach-list">
+          ${c.weaknesses.map(w => `<div class="coach-item"><span class="coach-item-icon">🎯</span><span>${escapeHtml(w)}</span></div>`).join('')}
+        </div>` : ''}
+
+      <!-- Tips -->
+      ${c.tips?.length ? `
+        <div class="coach-section-title">💡 Coaching Tips</div>
+        ${c.tips.map(t => `<div class="coach-tip"><div class="coach-tip-title">${escapeHtml(t.title)}</div><div class="coach-tip-detail">${escapeHtml(t.detail)}</div></div>`).join('')}` : ''}
+
+      <!-- Weekly Goal -->
+      ${c.weeklyGoal ? `
+        <div class="coach-section-title" style="margin-top:16px;">🎯 This Week's Goal</div>
+        <div class="coach-goal"><div class="coach-goal-label">Focus On</div>${escapeHtml(c.weeklyGoal)}</div>` : ''}
+    `;
+  } catch (err) {
+    coachResults.innerHTML = `<div class="scanner-empty">⚠️ Could not generate coaching. Log more trades first.</div>`;
+  } finally {
+    setLoading(coachRunBtn, false);
+    coachStatus.style.display = 'none';
+  }
+}
+
+// ===========================================================================
+// PATCH enterApp — start alert polling + request notifications
+// ===========================================================================
+const _origEnterApp = enterApp;
+// Override enterApp to hook in our new features
+const enterAppOrig = enterApp;
+window.__apexEnterAppExtended = true;
+
+// Patch: after user logs in, start polling and request notification permission
+const origEnterAppFn = window.enterApp;
+document.addEventListener('DOMContentLoaded', () => {});
+
+// Direct hook — run after enterApp
+function enterApp() {
+  authScreen.style.display = 'none';
+  appScreen.style.display  = 'flex';
+  const name = currentUser?.name || 'User';
+  userNameEl.textContent   = name;
+  userAvatar.textContent   = name.charAt(0).toUpperCase();
+  checkHealth();
+  loadConversations();
+  loadTicker();
+  // New: start alert polling + notifications
+  requestNotificationPermission();
+  startAlertPolling();
+}

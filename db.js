@@ -17,13 +17,19 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
 function loadState() {
   if (!fs.existsSync(DB_FILE)) {
-    return { users: [], conversations: [], messages: [], nextIds: { user: 1, conversation: 1, message: 1 } };
+    return { users: [], conversations: [], messages: [], trades: [], alerts: [], nextIds: { user: 1, conversation: 1, message: 1, trade: 1, alert: 1 } };
   }
   try {
-    return JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
+    const s = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
+    // Migrate: add missing arrays/ids for existing installs
+    if (!s.trades)  s.trades  = [];
+    if (!s.alerts)  s.alerts  = [];
+    if (!s.nextIds.trade) s.nextIds.trade = 1;
+    if (!s.nextIds.alert) s.nextIds.alert = 1;
+    return s;
   } catch (err) {
     console.error('Failed to parse app.json, starting fresh:', err.message);
-    return { users: [], conversations: [], messages: [], nextIds: { user: 1, conversation: 1, message: 1 } };
+    return { users: [], conversations: [], messages: [], trades: [], alerts: [], nextIds: { user: 1, conversation: 1, message: 1, trade: 1, alert: 1 } };
   }
 }
 
@@ -155,4 +161,82 @@ module.exports = {
   renameConversation,
   getMessages,
   addMessage,
+
+  // ── Trading Journal ──────────────────────────────────────
+  getTradesByUser(userId) {
+    return state.trades
+      .filter(t => t.user_id === Number(userId))
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  },
+  addTrade(userId, { symbol, direction, entryPrice, exitPrice, stopLoss, takeProfit, lotSize, result, pnl, notes, date }) {
+    const trade = {
+      id: state.nextIds.trade++,
+      user_id: Number(userId),
+      symbol: symbol || '',
+      direction: direction || 'long',
+      entryPrice: Number(entryPrice) || 0,
+      exitPrice: exitPrice !== undefined ? Number(exitPrice) : null,
+      stopLoss: stopLoss !== undefined ? Number(stopLoss) : null,
+      takeProfit: takeProfit !== undefined ? Number(takeProfit) : null,
+      lotSize: Number(lotSize) || 1,
+      result: result || 'open',   // open | win | loss | breakeven
+      pnl: pnl !== undefined ? Number(pnl) : null,
+      notes: notes || '',
+      date: date || nowISO(),
+      created_at: nowISO(),
+    };
+    state.trades.push(trade);
+    persist();
+    return trade;
+  },
+  updateTrade(id, userId, updates) {
+    const trade = state.trades.find(t => t.id === Number(id) && t.user_id === Number(userId));
+    if (!trade) return null;
+    Object.assign(trade, updates, { updated_at: nowISO() });
+    persist();
+    return trade;
+  },
+  deleteTrade(id, userId) {
+    const before = state.trades.length;
+    state.trades = state.trades.filter(t => !(t.id === Number(id) && t.user_id === Number(userId)));
+    if (state.trades.length < before) { persist(); return true; }
+    return false;
+  },
+
+  // ── Price Alerts ─────────────────────────────────────────
+  getAlertsByUser(userId) {
+    return state.alerts.filter(a => a.user_id === Number(userId));
+  },
+  addAlert(userId, { symbol, targetPrice, condition, note }) {
+    const alert = {
+      id: state.nextIds.alert++,
+      user_id: Number(userId),
+      symbol: symbol || '',
+      targetPrice: Number(targetPrice),
+      condition: condition || 'above',   // above | below
+      note: note || '',
+      triggered: false,
+      created_at: nowISO(),
+    };
+    state.alerts.push(alert);
+    persist();
+    return alert;
+  },
+  triggerAlert(id) {
+    const alert = state.alerts.find(a => a.id === Number(id));
+    if (!alert) return null;
+    alert.triggered = true;
+    alert.triggered_at = nowISO();
+    persist();
+    return alert;
+  },
+  deleteAlert(id, userId) {
+    const before = state.alerts.length;
+    state.alerts = state.alerts.filter(a => !(a.id === Number(id) && a.user_id === Number(userId)));
+    if (state.alerts.length < before) { persist(); return true; }
+    return false;
+  },
+  getAllActiveAlerts() {
+    return state.alerts.filter(a => !a.triggered);
+  },
 };
