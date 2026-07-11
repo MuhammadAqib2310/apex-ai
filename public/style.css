@@ -1684,3 +1684,127 @@ body.light .debate-verdict { background: rgba(0,0,0,0.03); }
   line-height: 1.6;
 }
 .coach-goal-label { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: #10b981; font-weight: 700; margin-bottom: 6px; }
+
+/* ============================================================
+   CURRENCY CONVERTER
+   ============================================================ */
+.cv-swap-row { display:flex; justify-content:center; margin: -4px 0; }
+.cv-swap-btn {
+  background: var(--panel); border: 1px solid var(--panel-border);
+  color: var(--violet-2); border-radius: 999px;
+  padding: 6px 16px; font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all .15s;
+}
+.cv-swap-btn:hover { border-color: var(--violet); background: rgba(139,92,246,0.1); }
+.cv-result-box {
+  background: linear-gradient(135deg, rgba(14,165,233,0.1), rgba(2,132,199,0.05));
+  border: 1px solid rgba(14,165,233,0.3);
+  border-radius: 14px; padding: 20px 22px; text-align: center;
+}
+.cv-result-amount { font-size: 36px; font-weight: 900; color: #0ea5e9; line-height: 1; }
+.cv-result-label  { font-size: 13px; color: var(--text-dim); margin-top: 6px; }
+.cv-result-rate   { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+.cv-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr));
+  gap: 8px; margin-top: 14px;
+}
+.cv-grid-item {
+  background: var(--panel); border: 1px solid var(--panel-border);
+  border-radius: 10px; padding: 10px; text-align: center;
+}
+.cv-grid-val   { font-size: 15px; font-weight: 700; color: var(--text); }
+.cv-grid-label { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+/* ============================================================
+   COMPOUND / PROFIT CALCULATOR
+   ============================================================ */
+.cp-result-highlight {
+  background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(22,163,74,0.06));
+  border: 1px solid rgba(34,197,94,0.3);
+  border-radius: 14px; padding: 18px 20px; text-align: center; margin-bottom: 14px;
+}
+.cp-result-val   { font-size: 36px; font-weight: 900; color: var(--green); line-height: 1; }
+.cp-result-label { font-size: 13px; color: var(--text-dim); margin-top: 6px; }
+.cp-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
+.cp-table th { background: rgba(139,92,246,0.12); color: var(--violet-2); padding: 7px 10px; text-align: left; font-size: 11px; text-transform: uppercase; }
+.cp-table td { border-bottom: 1px solid var(--panel-border); padding: 7px 10px; color: var(--text-mid); }
+.cp-table tr:last-child td { border-bottom: none; }
+.cp-table td.pos { color: var(--green); font-weight: 700; }
+
+/* ============================================================
+   TRADING DICTIONARY
+   ============================================================ */
+.dict-card {
+  background: var(--panel); border: 1px solid var(--panel-border);
+  border-left: 3px solid var(--violet); border-radius: 12px; padding: 16px 18px;
+}
+.dict-term  { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.dict-cat   { font-size: 11px; color: var(--violet-2); text-transform: uppercase; letter-spacing: .6px; font-weight: 700; margin-bottom: 12px; }
+.dict-def   { font-size: 14px; color: var(--text-mid); line-height: 1.7; margin-bottom: 14px; }
+.dict-example {
+  background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2);
+  border-radius: 8px; padding: 10px 14px; font-size: 13px;
+  color: var(--text-dim); line-height: 1.6; margin-bottom: 12px;
+}
+.dict-example-label { font-size: 11px; font-weight: 700; color: var(--violet-2); margin-bottom: 4px; text-transform: uppercase; }
+.dict-related { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.dict-related-label { font-size: 11px; color: var(--text-dim); width: 100%; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+.dict-related-chip {
+  background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.25);
+  color: var(--violet-2); border-radius: 999px; padding: 4px 12px;
+  font-size: 12px; cursor: pointer; transition: all .15s;
+}
+.dict-related-chip:hover { background: rgba(139,92,246,0.2); border-color: var(--violet); }
+
+/* ============================================================
+   FEAR & GREED + QUICK OPINION
+   ============================================================ */
+.fg-result-box {
+  text-align: center; margin-bottom: 18px;
+}
+.fg-score-big {
+  font-size: 72px; font-weight: 900; line-height: 1;
+  margin-bottom: 4px;
+}
+.fg-label-big { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+.fg-desc { font-size: 13.5px; color: var(--text-mid); line-height: 1.65; }
+
+.fg-signals {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr));
+  gap: 8px; margin: 14px 0;
+}
+.fg-signal {
+  background: var(--panel); border: 1px solid var(--panel-border);
+  border-radius: 10px; padding: 10px 12px; text-align: center;
+}
+.fg-signal-name { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.fg-signal-val  { font-size: 15px; font-weight: 700; }
+
+/* Quick Opinion */
+.qo-verdict-box {
+  border-radius: 16px; padding: 22px 20px; text-align: center; margin-bottom: 16px;
+}
+.qo-verdict-box.buy    { background: rgba(34,197,94,0.1); border: 2px solid rgba(34,197,94,0.4); }
+.qo-verdict-box.sell   { background: rgba(239,68,68,0.1); border: 2px solid rgba(239,68,68,0.4); }
+.qo-verdict-box.wait   { background: rgba(245,158,11,0.1); border: 2px solid rgba(245,158,11,0.4); }
+.qo-verdict-box.neutral{ background: var(--panel); border: 1px solid var(--panel-border); }
+.qo-verdict-emoji { font-size: 48px; line-height: 1; margin-bottom: 8px; }
+.qo-verdict-text  { font-size: 26px; font-weight: 900; }
+.qo-verdict-text.buy  { color: var(--green); }
+.qo-verdict-text.sell { color: var(--red); }
+.qo-verdict-text.wait { color: #f59e0b; }
+.qo-verdict-sub   { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+.qo-reasons { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.qo-reason {
+  display: flex; gap: 9px; align-items: flex-start;
+  font-size: 13px; color: var(--text-mid); line-height: 1.5;
+  padding: 8px 12px; background: var(--panel);
+  border: 1px solid var(--panel-border); border-radius: 8px;
+}
+.qo-confidence {
+  background: var(--panel); border: 1px solid var(--panel-border);
+  border-radius: 10px; padding: 12px 14px; margin-top: 8px;
+}
+.qo-conf-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.qo-conf-bar { height: 8px; background: var(--panel-border); border-radius: 999px; overflow: hidden; }
+.qo-conf-fill { height: 100%; border-radius: 999px; transition: width .8s cubic-bezier(.4,0,.2,1); }

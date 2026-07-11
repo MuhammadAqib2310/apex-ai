@@ -2509,3 +2509,436 @@ function enterApp() {
   requestNotificationPermission();
   startAlertPolling();
 }
+
+// ===========================================================================
+// CURRENCY CONVERTER
+// ===========================================================================
+const converterModal = document.getElementById('converterModal');
+const converterBtn   = document.getElementById('converterBtn');
+const converterClose = document.getElementById('converterClose');
+
+converterBtn.addEventListener('click', () => { converterModal.style.display='flex'; document.body.style.overflow='hidden'; closeSidebar(); });
+converterClose.addEventListener('click', () => { converterModal.style.display='none'; document.body.style.overflow=''; });
+converterModal.addEventListener('click', e => { if(e.target===converterModal){converterModal.style.display='none';document.body.style.overflow='';} });
+
+// Swap currencies
+document.getElementById('cvSwap').addEventListener('click', () => {
+  const f = document.getElementById('cvFrom');
+  const t = document.getElementById('cvTo');
+  const tmp = f.value; f.value = t.value; t.value = tmp;
+});
+
+document.getElementById('cvConvert').addEventListener('click', convertCurrency);
+document.getElementById('cvAmount').addEventListener('keydown', e => { if(e.key==='Enter') convertCurrency(); });
+
+// Exchange rates (hardcoded base rates vs USD — updated periodically)
+const FX_RATES = {
+  USD:1, EUR:0.92, GBP:0.79, JPY:157.5, CHF:0.898, CAD:1.36, AUD:1.53,
+  NZD:1.64, CNY:7.25, INR:83.5, PKR:278, AED:3.67, SAR:3.75, SGD:1.34,
+  HKD:7.82, NOK:10.6, SEK:10.4, MXN:17.1, BRL:4.97, ZAR:18.6, TRY:32.5,
+  KRW:1340, THB:36.5, MYR:4.72, IDR:15850, EGP:48.5, NGN:1580,
+  BTC:0.0000145, ETH:0.00038,
+};
+
+async function convertCurrency() {
+  const btn = document.getElementById('cvConvert');
+  const amount = parseFloat(document.getElementById('cvAmount').value);
+  const from   = document.getElementById('cvFrom').value;
+  const to     = document.getElementById('cvTo').value;
+  const resEl  = document.getElementById('cvResult');
+
+  if (!amount || amount <= 0) return;
+  setLoading(btn, true);
+
+  // Try live rate from market API first
+  let rate = null;
+  try {
+    if (from !== to) {
+      const sym = `${from}/${to}`;
+      const r = await fetch(`${API}/market/quote?symbol=${encodeURIComponent(sym)}`, { headers: authHeaders() });
+      if (r.ok) {
+        const d = await r.json();
+        if (d.quote?.price) rate = parseFloat(d.quote.price);
+      }
+    }
+  } catch (_) {}
+
+  // Fallback to hardcoded rates
+  if (!rate) {
+    const fromUSD = FX_RATES[from] || 1;
+    const toUSD   = FX_RATES[to]   || 1;
+    rate = toUSD / fromUSD;
+  }
+
+  const result = amount * rate;
+  const formatted = result > 1000 ? result.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})
+                  : result < 0.01 ? result.toFixed(8)
+                  : result.toFixed(4);
+
+  // Also show popular conversions
+  const popular = ['USD','EUR','GBP','PKR','AED','SAR','INR'].filter(c => c !== from && c !== to).slice(0,4);
+  const popHtml = popular.map(c => {
+    const r2 = (FX_RATES[c] || 1) / (FX_RATES[from] || 1);
+    const v  = (amount * r2);
+    return `<div class="cv-grid-item"><div class="cv-grid-val">${v > 1000 ? v.toLocaleString('en-US',{maximumFractionDigits:2}) : v.toFixed(4)}</div><div class="cv-grid-label">${c}</div></div>`;
+  }).join('');
+
+  resEl.style.display = 'block';
+  resEl.innerHTML = `
+    <div class="cv-result-box">
+      <div class="cv-result-amount">${formatted} ${to}</div>
+      <div class="cv-result-label">${amount.toLocaleString()} ${from} = ${formatted} ${to}</div>
+      <div class="cv-result-rate">1 ${from} = ${rate.toFixed(6)} ${to}</div>
+    </div>
+    ${popHtml ? `<div style="font-size:11px;color:var(--text-dim);margin:12px 0 6px;text-transform:uppercase;letter-spacing:.5px;">${amount} ${from} in other currencies</div><div class="cv-grid">${popHtml}</div>` : ''}
+    <div style="font-size:11px;color:var(--text-dim);margin-top:10px;text-align:center;">💡 Rates are approximate. Verify before trading.</div>
+  `;
+  setLoading(btn, false);
+}
+
+// ===========================================================================
+// PROFIT / COMPOUND CALCULATOR
+// ===========================================================================
+const compoundModal = document.getElementById('compoundModal');
+const compoundBtn   = document.getElementById('compoundBtn');
+const compoundClose = document.getElementById('compoundClose');
+
+compoundBtn.addEventListener('click', () => { compoundModal.style.display='flex'; document.body.style.overflow='hidden'; closeSidebar(); });
+compoundClose.addEventListener('click', () => { compoundModal.style.display='none'; document.body.style.overflow=''; });
+compoundModal.addEventListener('click', e => { if(e.target===compoundModal){compoundModal.style.display='none';document.body.style.overflow='';} });
+
+function switchCTab(tab) {
+  ['compound','target','daily'].forEach(t => {
+    const btn = document.getElementById('ctab'+t.charAt(0).toUpperCase()+t.slice(1));
+    const el  = document.getElementById('cTab'+t.charAt(0).toUpperCase()+t.slice(1));
+    if(btn) btn.classList.toggle('active', t===tab);
+    if(el)  el.style.display = t===tab ? 'block' : 'none';
+  });
+}
+
+// Compound Growth
+document.getElementById('cpCalc').addEventListener('click', () => {
+  const capital  = parseFloat(document.getElementById('cpCapital').value) || 0;
+  const monthly  = parseFloat(document.getElementById('cpMonthly').value) || 0;
+  const months   = parseInt(document.getElementById('cpMonths').value)    || 12;
+  const withdraw = parseFloat(document.getElementById('cpWithdraw').value) || 0;
+  if (!capital || !monthly) return;
+
+  let bal = capital;
+  const rows = [];
+  for (let m = 1; m <= months; m++) {
+    const profit = bal * (monthly/100);
+    bal = bal + profit - withdraw;
+    if (bal < 0) bal = 0;
+    if (m <= 6 || m === months || m % 3 === 0) {
+      rows.push({m, bal, profit});
+    }
+  }
+
+  const finalBal = bal;
+  const totalProfit = finalBal - capital + (withdraw * months);
+  const roi = ((finalBal - capital) / capital * 100).toFixed(1);
+
+  document.getElementById('cpResult').innerHTML = `
+    <div class="cp-result-highlight">
+      <div class="cp-result-val">$${finalBal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+      <div class="cp-result-label">Final Balance after ${months} months · ROI: ${roi}%</div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="cp-table">
+        <tr><th>Month</th><th>Balance</th><th>Monthly Profit</th></tr>
+        ${rows.map(r=>`<tr><td>Month ${r.m}</td><td class="pos">$${r.bal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td>$${r.profit.toFixed(2)}</td></tr>`).join('')}
+      </table>
+    </div>`;
+});
+
+// Target Planner
+document.getElementById('tgCalc').addEventListener('click', () => {
+  const capital = parseFloat(document.getElementById('tgCapital').value) || 0;
+  const target  = parseFloat(document.getElementById('tgTarget').value)  || 0;
+  const ret     = parseFloat(document.getElementById('tgReturn').value)  || 0;
+  if (!capital || !target || !ret) return;
+
+  const months = Math.ceil(Math.log(target/capital) / Math.log(1 + ret/100));
+  const years  = Math.floor(months / 12);
+  const remMo  = months % 12;
+  const multiplier = (target/capital).toFixed(1);
+
+  document.getElementById('tgResult').innerHTML = `
+    <div class="cp-result-highlight">
+      <div class="cp-result-val">${months} Months</div>
+      <div class="cp-result-label">${years > 0 ? years+'y '+remMo+'m' : remMo+' months'} to reach $${target.toLocaleString()} (${multiplier}x your money)</div>
+    </div>
+    <div class="risk-stat" style="margin-top:10px;text-align:center;">
+      <div class="risk-stat-label">To reach target faster, increase your monthly return %</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;">
+        ${[5,10,15,20,25,30].map(r => {
+          const m = Math.ceil(Math.log(target/capital) / Math.log(1+r/100));
+          return `<div class="cv-grid-item"><div class="cv-grid-val" style="font-size:13px;">${m}mo</div><div class="cv-grid-label">at ${r}%/mo</div></div>`;
+        }).join('')}
+      </div>
+    </div>`;
+});
+
+// Daily Target
+document.getElementById('dtCalc').addEventListener('click', () => {
+  const account = parseFloat(document.getElementById('dtAccount').value) || 0;
+  const goal    = parseFloat(document.getElementById('dtGoal').value)    || 0;
+  const avgWin  = parseFloat(document.getElementById('dtAvgWin').value)  || 0;
+  const winRate = parseFloat(document.getElementById('dtWinRate').value) || 60;
+  if (!account || !goal || !avgWin) return;
+
+  const tradesNeeded = Math.ceil(goal / (avgWin * (winRate/100)));
+  const dailyRiskPct = ((goal / account) * 100).toFixed(2);
+  const monthlyGoal  = (goal * 22).toFixed(0);
+  const yearlyGoal   = (goal * 252).toFixed(0);
+
+  document.getElementById('dtResult').innerHTML = `
+    <div class="jt-stat-grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr));">
+      <div class="jt-stat-card"><div class="jt-stat-label">Trades Needed/Day</div><div class="jt-stat-val violet">${tradesNeeded}</div></div>
+      <div class="jt-stat-card"><div class="jt-stat-label">Daily Risk</div><div class="jt-stat-val red">${dailyRiskPct}%</div></div>
+      <div class="jt-stat-card"><div class="jt-stat-label">Monthly (22 days)</div><div class="jt-stat-val green">$${parseFloat(monthlyGoal).toLocaleString()}</div></div>
+      <div class="jt-stat-card"><div class="jt-stat-label">Yearly (252 days)</div><div class="jt-stat-val green">$${parseFloat(yearlyGoal).toLocaleString()}</div></div>
+    </div>
+    <div class="risk-disclaimer" style="margin-top:12px;">⚠️ ${parseFloat(dailyRiskPct)>5 ? 'High daily risk! Reduce goal or increase account size.' : 'Risk level looks manageable.'} Always stick to 1-2% per trade.</div>`;
+});
+
+// ===========================================================================
+// TRADING DICTIONARY
+// ===========================================================================
+const dictionaryModal = document.getElementById('dictionaryModal');
+const dictionaryBtn   = document.getElementById('dictionaryBtn');
+const dictionaryClose = document.getElementById('dictionaryClose');
+
+dictionaryBtn.addEventListener('click', () => { dictionaryModal.style.display='flex'; document.body.style.overflow='hidden'; closeSidebar(); setTimeout(()=>document.getElementById('dictSearch').focus(),100); });
+dictionaryClose.addEventListener('click', () => { dictionaryModal.style.display='none'; document.body.style.overflow=''; });
+dictionaryModal.addEventListener('click', e => { if(e.target===dictionaryModal){dictionaryModal.style.display='none';document.body.style.overflow='';} });
+
+document.querySelectorAll('.dict-quick').forEach(b => b.addEventListener('click', () => { document.getElementById('dictSearch').value=b.dataset.term; lookupTerm(b.dataset.term); }));
+document.getElementById('dictSearchBtn').addEventListener('click', () => lookupTerm(document.getElementById('dictSearch').value.trim()));
+document.getElementById('dictSearch').addEventListener('keydown', e => { if(e.key==='Enter') lookupTerm(document.getElementById('dictSearch').value.trim()); });
+
+async function lookupTerm(term) {
+  if (!term) return;
+  const btn    = document.getElementById('dictSearchBtn');
+  const status = document.getElementById('dictStatus');
+  const result = document.getElementById('dictResult');
+  status.style.display = 'flex';
+  result.innerHTML = '';
+  setLoading(btn, true);
+
+  const prompt = `You are a trading education expert. Explain the trading term: "${term}"
+
+Return ONLY this exact JSON format:
+{
+  "term": "${term}",
+  "category": "Technical Analysis",
+  "definition": "Clear, simple 2-3 sentence definition a beginner can understand.",
+  "example": "A real-world trading example showing how this is used.",
+  "keyPoints": ["Point 1", "Point 2", "Point 3"],
+  "relatedTerms": ["Term1", "Term2", "Term3"]
+}`;
+
+  try {
+    const res = await fetch(`${API}/ai-tool`, { method:'POST', headers:authHeaders(true), body:JSON.stringify({prompt}) });
+    const data = await res.json();
+    const match = (data.text||'').match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('no json');
+    const d = JSON.parse(match[0]);
+
+    result.innerHTML = `
+      <div class="dict-card">
+        <div class="dict-term">${escapeHtml(d.term)}</div>
+        <div class="dict-cat">${escapeHtml(d.category || 'Trading')}</div>
+        <div class="dict-def">${escapeHtml(d.definition)}</div>
+        ${d.example ? `<div class="dict-example"><div class="dict-example-label">📌 Example</div>${escapeHtml(d.example)}</div>` : ''}
+        ${d.keyPoints?.length ? `<ul style="padding-left:16px;color:var(--text-mid);font-size:13px;line-height:1.8;">${d.keyPoints.map(p=>`<li>${escapeHtml(p)}</li>`).join('')}</ul>` : ''}
+        ${d.relatedTerms?.length ? `<div class="dict-related"><span class="dict-related-label">Related Terms</span>${d.relatedTerms.map(t=>`<button class="dict-related-chip" onclick="document.getElementById('dictSearch').value='${escapeHtml(t)}';lookupTerm('${escapeHtml(t)}')">${escapeHtml(t)}</button>`).join('')}</div>` : ''}
+      </div>`;
+  } catch(e) {
+    result.innerHTML = `<div class="scanner-empty">⚠️ Could not find definition. Try again.</div>`;
+  } finally {
+    status.style.display = 'none';
+    setLoading(btn, false);
+  }
+}
+
+// ===========================================================================
+// FEAR & GREED INDEX
+// ===========================================================================
+const fearGreedModal = document.getElementById('fearGreedModal');
+const fearGreedBtn   = document.getElementById('fearGreedBtn');
+const fearGreedClose = document.getElementById('fearGreedClose');
+
+fearGreedBtn.addEventListener('click', () => { fearGreedModal.style.display='flex'; document.body.style.overflow='hidden'; closeSidebar(); });
+fearGreedClose.addEventListener('click', () => { fearGreedModal.style.display='none'; document.body.style.overflow=''; });
+fearGreedModal.addEventListener('click', e => { if(e.target===fearGreedModal){fearGreedModal.style.display='none';document.body.style.overflow='';} });
+document.getElementById('fgRunBtn').addEventListener('click', runFearGreed);
+
+async function runFearGreed() {
+  const btn    = document.getElementById('fgRunBtn');
+  const status = document.getElementById('fgStatus');
+  const result = document.getElementById('fgResult');
+  const market = document.getElementById('fgMarket').value;
+  status.style.display = 'flex';
+  result.innerHTML = '';
+  setLoading(btn, true);
+
+  const marketNames = { crypto:'Crypto (BTC/ETH)', stocks:'Stocks (S&P 500)', forex:'Forex (DXY)', gold:'Gold (XAU/USD)' };
+
+  const prompt = `You are a market sentiment analyst. Analyze the current Fear & Greed Index for: ${marketNames[market]}
+
+Return ONLY this exact JSON format:
+{
+  "score": 62,
+  "label": "Greed",
+  "emoji": "😄",
+  "color": "#22c55e",
+  "description": "2-3 sentence explanation of current market sentiment and what it means for traders.",
+  "signals": [
+    {"name": "Price Momentum", "value": "Bullish", "icon": "📈"},
+    {"name": "Market Volatility", "value": "Low", "icon": "📊"},
+    {"name": "Trading Volume", "value": "High", "icon": "🔊"},
+    {"name": "Social Sentiment", "value": "Positive", "icon": "💬"},
+    {"name": "Institutional Flow", "value": "Buying", "icon": "🏦"}
+  ],
+  "advice": "Short actionable advice for traders based on this sentiment level."
+}
+
+Score guide: 0-25=Extreme Fear, 26-45=Fear, 46-55=Neutral, 56-75=Greed, 76-100=Extreme Greed`;
+
+  try {
+    const res  = await fetch(`${API}/ai-tool`, { method:'POST', headers:authHeaders(true), body:JSON.stringify({prompt}) });
+    const data = await res.json();
+    const match = (data.text||'').match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('no json');
+    const d = JSON.parse(match[0]);
+
+    result.innerHTML = `
+      <div class="fg-result-box">
+        <div class="fg-score-big" style="color:${escapeHtml(d.color)}">${d.emoji} ${d.score}</div>
+        <div class="fg-label-big" style="color:${escapeHtml(d.color)}">${escapeHtml(d.label)}</div>
+        <div class="fg-desc">${escapeHtml(d.description)}</div>
+      </div>
+      <div class="fg-signals">
+        ${(d.signals||[]).map(s=>`<div class="fg-signal"><div class="fg-signal-name">${s.icon} ${escapeHtml(s.name)}</div><div class="fg-signal-val">${escapeHtml(s.value)}</div></div>`).join('')}
+      </div>
+      <div class="coach-goal" style="margin-top:0;">
+        <div class="coach-goal-label">💡 Trader Advice</div>
+        ${escapeHtml(d.advice)}
+      </div>`;
+  } catch(e) {
+    result.innerHTML = `<div class="scanner-empty">⚠️ Could not fetch index. Try again.</div>`;
+  } finally {
+    status.style.display = 'none';
+    setLoading(btn, false);
+  }
+}
+
+// ===========================================================================
+// QUICK AI OPINION
+// ===========================================================================
+const quickOpinionModal = document.getElementById('quickOpinionModal');
+const quickOpinionBtn   = document.getElementById('quickOpinionBtn');
+const quickOpinionClose = document.getElementById('quickOpinionClose');
+
+quickOpinionBtn.addEventListener('click', () => { quickOpinionModal.style.display='flex'; document.body.style.overflow='hidden'; closeSidebar(); setTimeout(()=>document.getElementById('qoSymbol').focus(),100); });
+quickOpinionClose.addEventListener('click', () => { quickOpinionModal.style.display='none'; document.body.style.overflow=''; });
+quickOpinionModal.addEventListener('click', e => { if(e.target===quickOpinionModal){quickOpinionModal.style.display='none';document.body.style.overflow='';} });
+
+document.querySelectorAll('.qo-quick').forEach(b => b.addEventListener('click', () => { document.getElementById('qoSymbol').value=b.dataset.sym; runQuickOpinion(); }));
+document.getElementById('qoRunBtn').addEventListener('click', runQuickOpinion);
+document.getElementById('qoSymbol').addEventListener('keydown', e => { if(e.key==='Enter') runQuickOpinion(); });
+
+async function runQuickOpinion() {
+  const sym = document.getElementById('qoSymbol').value.trim();
+  if (!sym) { document.getElementById('qoSymbol').focus(); return; }
+  const btn    = document.getElementById('qoRunBtn');
+  const status = document.getElementById('qoStatus');
+  const result = document.getElementById('qoResult');
+  status.style.display = 'flex';
+  result.innerHTML = '';
+  setLoading(btn, true);
+
+  // Try to get live price
+  let liveData = '';
+  try {
+    const r = await fetch(`${API}/market/quote?symbol=${encodeURIComponent(sym)}`, { headers: authHeaders() });
+    if (r.ok) { const d = await r.json(); if(d.quote?.price) liveData = `Current Price: ${d.quote.price}, Change: ${d.quote.percentChange}%`; }
+  } catch(_) {}
+
+  const prompt = `Give a QUICK trading opinion for: ${sym}${liveData ? '\n'+liveData : ''}
+
+Return ONLY this exact JSON:
+{
+  "symbol": "${sym}",
+  "verdict": "BUY",
+  "emoji": "🚀",
+  "confidence": 72,
+  "timeframe": "Short-term (1-3 days)",
+  "oneLiner": "One punchy sentence summarizing the verdict.",
+  "reasons": [
+    "Reason 1 — specific and factual",
+    "Reason 2 — specific and factual",
+    "Reason 3 — specific and factual"
+  ],
+  "risk": "Key risk that could invalidate this view",
+  "keyLevel": "Most important price level to watch"
+}
+
+verdict must be: BUY, SELL, or WAIT`;
+
+  try {
+    const res  = await fetch(`${API}/ai-tool`, { method:'POST', headers:authHeaders(true), body:JSON.stringify({prompt}) });
+    const data = await res.json();
+    const match = (data.text||'').match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('no json');
+    const d = JSON.parse(match[0]);
+
+    const vClass = d.verdict==='BUY' ? 'buy' : d.verdict==='SELL' ? 'sell' : 'wait';
+    const vColor = d.verdict==='BUY' ? 'var(--green)' : d.verdict==='SELL' ? 'var(--red)' : '#f59e0b';
+    const conf   = Math.min(100, Math.max(0, d.confidence||50));
+
+    result.innerHTML = `
+      <div class="qo-verdict-box ${vClass}">
+        <div class="qo-verdict-emoji">${escapeHtml(d.emoji||'🤔')}</div>
+        <div class="qo-verdict-text ${vClass}">${escapeHtml(d.verdict)}</div>
+        <div class="qo-verdict-sub">${escapeHtml(d.symbol)} · ${escapeHtml(d.timeframe||'')}</div>
+        <div style="margin-top:8px;font-size:14px;color:var(--text-mid);font-style:italic;">"${escapeHtml(d.oneLiner)}"</div>
+      </div>
+
+      <div class="qo-reasons">
+        ${(d.reasons||[]).map((r,i)=>`<div class="qo-reason"><span style="font-size:16px;flex-shrink:0;">${i===0?'✅':i===1?'📌':'🔍'}</span><span>${escapeHtml(r)}</span></div>`).join('')}
+      </div>
+
+      <div class="qo-confidence">
+        <div class="qo-conf-label">Confidence Score: ${conf}%</div>
+        <div class="qo-conf-bar"><div class="qo-conf-fill" id="qoConfFill" style="width:0%;background:${vColor};"></div></div>
+      </div>
+
+      ${d.keyLevel ? `<div style="margin-top:10px;font-size:13px;color:var(--text-mid);padding:10px 14px;background:var(--panel);border:1px solid var(--panel-border);border-radius:10px;">📍 <strong>Key Level:</strong> ${escapeHtml(d.keyLevel)}</div>` : ''}
+      ${d.risk ? `<div style="margin-top:8px;font-size:13px;color:var(--text-mid);padding:10px 14px;background:var(--red-dim);border:1px solid rgba(239,68,68,0.2);border-radius:10px;">⚠️ <strong>Risk:</strong> ${escapeHtml(d.risk)}</div>` : ''}
+
+      <div style="margin-top:14px;display:flex;gap:8px;">
+        <button class="debate-action-btn primary" onclick="closeQuickOpinion();setInput('Full technical analysis of ${escapeHtml(sym)}');sendMessage();">📊 Full Analysis</button>
+        <button class="debate-action-btn" onclick="document.getElementById('qoResult').innerHTML='';document.getElementById('qoSymbol').value='';document.getElementById('qoSymbol').focus();">🔄 New Opinion</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-dim);text-align:center;margin-top:8px;">*Not financial advice. Educational only.</div>
+    `;
+
+    requestAnimationFrame(() => setTimeout(() => {
+      const fill = document.getElementById('qoConfFill');
+      if (fill) fill.style.width = conf + '%';
+    }, 100));
+  } catch(e) {
+    result.innerHTML = `<div class="scanner-empty">⚠️ Could not generate opinion. Try again.</div>`;
+  } finally {
+    status.style.display = 'none';
+    setLoading(btn, false);
+  }
+}
+
+function closeQuickOpinion() {
+  quickOpinionModal.style.display = 'none';
+  document.body.style.overflow = '';
+}

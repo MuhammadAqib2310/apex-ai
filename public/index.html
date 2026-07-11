@@ -304,6 +304,28 @@
         AI Coach
       </button>
 
+      <h3>Smart Tools</h3>
+      <button class="dashboard-btn" id="converterBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        Currency Converter
+      </button>
+      <button class="dashboard-btn" id="compoundBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Profit Calculator
+      </button>
+      <button class="dashboard-btn" id="dictionaryBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Trading Dictionary
+      </button>
+      <button class="dashboard-btn" id="fearGreedBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        Fear &amp; Greed
+      </button>
+      <button class="dashboard-btn" id="quickOpinionBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></svg>
+        Quick AI Opinion
+      </button>
+
       <h3>Quick Analysis</h3>
       <button class="quick-btn" data-prompt="Give me a full technical analysis of EUR/USD">🇪🇺 EUR/USD</button>
       <button class="quick-btn" data-prompt="Give me a full technical analysis of GBP/USD">🇬🇧 GBP/USD</button>
@@ -701,6 +723,276 @@
 
       <!-- Results area -->
       <div id="debateResults"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CURRENCY CONVERTER ===================== -->
+<div class="profile-modal" id="converterModal" style="display:none;">
+  <div class="profile-modal-inner" style="max-width:480px;">
+    <div class="profile-header">
+      <div class="profile-avatar-lg" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);font-size:22px;">💱</div>
+      <div><div class="profile-name">Currency Converter</div><div class="profile-email">Live exchange rates — 30+ currencies</div></div>
+      <button class="chart-close" id="converterClose" style="margin-left:auto">✕</button>
+    </div>
+    <div class="ptab-content">
+      <div class="risk-form">
+        <div class="risk-row">
+          <div class="risk-field">
+            <label>Amount</label>
+            <input type="number" id="cvAmount" value="100" min="0" step="any" />
+          </div>
+          <div class="risk-field">
+            <label>From</label>
+            <select id="cvFrom">
+              <option value="USD">🇺🇸 USD — US Dollar</option>
+              <option value="EUR">🇪🇺 EUR — Euro</option>
+              <option value="GBP">🇬🇧 GBP — British Pound</option>
+              <option value="JPY">🇯🇵 JPY — Japanese Yen</option>
+              <option value="CHF">🇨🇭 CHF — Swiss Franc</option>
+              <option value="CAD">🇨🇦 CAD — Canadian Dollar</option>
+              <option value="AUD">🇦🇺 AUD — Australian Dollar</option>
+              <option value="NZD">🇳🇿 NZD — New Zealand Dollar</option>
+              <option value="CNY">🇨🇳 CNY — Chinese Yuan</option>
+              <option value="INR">🇮🇳 INR — Indian Rupee</option>
+              <option value="PKR">🇵🇰 PKR — Pakistani Rupee</option>
+              <option value="AED">🇦🇪 AED — UAE Dirham</option>
+              <option value="SAR">🇸🇦 SAR — Saudi Riyal</option>
+              <option value="SGD">🇸🇬 SGD — Singapore Dollar</option>
+              <option value="HKD">🇭🇰 HKD — Hong Kong Dollar</option>
+              <option value="NOK">🇳🇴 NOK — Norwegian Krone</option>
+              <option value="SEK">🇸🇪 SEK — Swedish Krona</option>
+              <option value="MXN">🇲🇽 MXN — Mexican Peso</option>
+              <option value="BRL">🇧🇷 BRL — Brazilian Real</option>
+              <option value="ZAR">🇿🇦 ZAR — South African Rand</option>
+              <option value="TRY">🇹🇷 TRY — Turkish Lira</option>
+              <option value="KRW">🇰🇷 KRW — South Korean Won</option>
+              <option value="THB">🇹🇭 THB — Thai Baht</option>
+              <option value="MYR">🇲🇾 MYR — Malaysian Ringgit</option>
+              <option value="IDR">🇮🇩 IDR — Indonesian Rupiah</option>
+              <option value="EGP">🇪🇬 EGP — Egyptian Pound</option>
+              <option value="NGN">🇳🇬 NGN — Nigerian Naira</option>
+              <option value="BTC">₿ BTC — Bitcoin</option>
+              <option value="ETH">⟠ ETH — Ethereum</option>
+            </select>
+          </div>
+        </div>
+        <div class="cv-swap-row">
+          <button class="cv-swap-btn" id="cvSwap" title="Swap currencies">⇅ Swap</button>
+        </div>
+        <div class="risk-row">
+          <div class="risk-field" style="width:100%">
+            <label>To</label>
+            <select id="cvTo">
+              <option value="PKR">🇵🇰 PKR — Pakistani Rupee</option>
+              <option value="USD">🇺🇸 USD — US Dollar</option>
+              <option value="EUR">🇪🇺 EUR — Euro</option>
+              <option value="GBP">🇬🇧 GBP — British Pound</option>
+              <option value="JPY">🇯🇵 JPY — Japanese Yen</option>
+              <option value="AED">🇦🇪 AED — UAE Dirham</option>
+              <option value="SAR">🇸🇦 SAR — Saudi Riyal</option>
+              <option value="INR">🇮🇳 INR — Indian Rupee</option>
+              <option value="CHF">🇨🇭 CHF — Swiss Franc</option>
+              <option value="CAD">🇨🇦 CAD — Canadian Dollar</option>
+              <option value="AUD">🇦🇺 AUD — Australian Dollar</option>
+              <option value="CNY">🇨🇳 CNY — Chinese Yuan</option>
+              <option value="SGD">🇸🇬 SGD — Singapore Dollar</option>
+              <option value="HKD">🇭🇰 HKD — Hong Kong Dollar</option>
+              <option value="TRY">🇹🇷 TRY — Turkish Lira</option>
+              <option value="BRL">🇧🇷 BRL — Brazilian Real</option>
+              <option value="MXN">🇲🇽 MXN — Mexican Peso</option>
+              <option value="ZAR">🇿🇦 ZAR — South African Rand</option>
+              <option value="EGP">🇪🇬 EGP — Egyptian Pound</option>
+              <option value="NGN">🇳🇬 NGN — Nigerian Naira</option>
+              <option value="NZD">🇳🇿 NZD — New Zealand Dollar</option>
+              <option value="NOK">🇳🇴 NOK — Norwegian Krone</option>
+              <option value="SEK">🇸🇪 SEK — Swedish Krona</option>
+              <option value="KRW">🇰🇷 KRW — South Korean Won</option>
+              <option value="BTC">₿ BTC — Bitcoin</option>
+              <option value="ETH">⟠ ETH — Ethereum</option>
+            </select>
+          </div>
+        </div>
+        <button class="primary-btn" id="cvConvert" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);box-shadow:0 4px 20px rgba(14,165,233,0.35);">
+          <span class="btn-text">💱 Convert</span>
+          <span class="btn-loader" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span>
+        </button>
+      </div>
+      <div id="cvResult" style="display:none;margin-top:18px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PROFIT CALCULATOR ===================== -->
+<div class="profile-modal" id="compoundModal" style="display:none;">
+  <div class="profile-modal-inner" style="max-width:500px;max-height:92vh;overflow-y:auto;">
+    <div class="profile-header">
+      <div class="profile-avatar-lg" style="background:linear-gradient(135deg,#22c55e,#16a34a);font-size:22px;">📈</div>
+      <div><div class="profile-name">Profit Calculator</div><div class="profile-email">Compound growth · Daily profit · Target planner</div></div>
+      <button class="chart-close" id="compoundClose" style="margin-left:auto">✕</button>
+    </div>
+    <div class="ptab-content">
+      <div class="profile-tabs" style="margin:-24px -24px 20px;">
+        <button class="ptab active" id="ctabCompound" onclick="switchCTab('compound')">📈 Compound</button>
+        <button class="ptab" id="ctabTarget" onclick="switchCTab('target')">🎯 Target</button>
+        <button class="ptab" id="ctabDaily" onclick="switchCTab('daily')">📅 Daily</button>
+      </div>
+
+      <!-- Compound Growth -->
+      <div id="cTabCompound">
+        <div class="risk-form">
+          <div class="risk-row">
+            <div class="risk-field"><label>Starting Capital ($)</label><input type="number" id="cpCapital" placeholder="1000" value="1000" min="1" step="any"/></div>
+            <div class="risk-field"><label>Monthly Return (%)</label><input type="number" id="cpMonthly" placeholder="10" value="10" min="0.1" step="any"/></div>
+          </div>
+          <div class="risk-row">
+            <div class="risk-field"><label>Duration (Months)</label><input type="number" id="cpMonths" placeholder="12" value="12" min="1" max="120" step="1"/></div>
+            <div class="risk-field"><label>Monthly Withdrawal ($)</label><input type="number" id="cpWithdraw" placeholder="0" value="0" min="0" step="any"/></div>
+          </div>
+          <button class="primary-btn" id="cpCalc" style="background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 4px 20px rgba(34,197,94,0.3);">📈 Calculate Growth</button>
+        </div>
+        <div id="cpResult" style="margin-top:16px;"></div>
+      </div>
+
+      <!-- Target Planner -->
+      <div id="cTabTarget" style="display:none;">
+        <div class="risk-form">
+          <div class="risk-row">
+            <div class="risk-field"><label>Starting Capital ($)</label><input type="number" id="tgCapital" placeholder="1000" value="1000" step="any"/></div>
+            <div class="risk-field"><label>Target Amount ($)</label><input type="number" id="tgTarget" placeholder="10000" value="10000" step="any"/></div>
+          </div>
+          <div class="risk-row">
+            <div class="risk-field" style="width:100%"><label>Monthly Return (%)</label><input type="number" id="tgReturn" placeholder="10" value="10" step="any"/></div>
+          </div>
+          <button class="primary-btn" id="tgCalc" style="background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 4px 20px rgba(34,197,94,0.3);">🎯 How Long Will It Take?</button>
+        </div>
+        <div id="tgResult" style="margin-top:16px;"></div>
+      </div>
+
+      <!-- Daily Target -->
+      <div id="cTabDaily" style="display:none;">
+        <div class="risk-form">
+          <div class="risk-row">
+            <div class="risk-field"><label>Account Size ($)</label><input type="number" id="dtAccount" placeholder="1000" value="1000" step="any"/></div>
+            <div class="risk-field"><label>Daily Profit Goal ($)</label><input type="number" id="dtGoal" placeholder="50" value="50" step="any"/></div>
+          </div>
+          <div class="risk-row">
+            <div class="risk-field"><label>Avg Win per Trade ($)</label><input type="number" id="dtAvgWin" placeholder="20" value="20" step="any"/></div>
+            <div class="risk-field"><label>Win Rate (%)</label><input type="number" id="dtWinRate" placeholder="60" value="60" step="any"/></div>
+          </div>
+          <button class="primary-btn" id="dtCalc" style="background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 4px 20px rgba(34,197,94,0.3);">📅 Calculate Daily Plan</button>
+        </div>
+        <div id="dtResult" style="margin-top:16px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TRADING DICTIONARY ===================== -->
+<div class="profile-modal" id="dictionaryModal" style="display:none;">
+  <div class="profile-modal-inner" style="max-width:580px;max-height:92vh;overflow-y:auto;">
+    <div class="profile-header" style="position:sticky;top:0;z-index:10;background:var(--bg-1);">
+      <div class="profile-avatar-lg" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);font-size:22px;">📚</div>
+      <div><div class="profile-name">Trading Dictionary</div><div class="profile-email">500+ terms explained simply — Beginner to Pro</div></div>
+      <button class="chart-close" id="dictionaryClose" style="margin-left:auto">✕</button>
+    </div>
+    <div class="ptab-content">
+      <div style="display:flex;gap:10px;margin-bottom:16px;">
+        <input type="text" id="dictSearch" placeholder="Search term… e.g. RSI, Stop Loss, SMC, ICT, Pip…" class="debate-input" style="flex:1;" />
+        <button class="primary-btn" id="dictSearchBtn" style="width:auto;padding:11px 20px;white-space:nowrap;">
+          <span class="btn-text">🔍 Explain</span>
+          <span class="btn-loader" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span>
+        </button>
+      </div>
+      <!-- Quick popular terms -->
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
+        <button class="chip dict-quick" data-term="RSI">RSI</button>
+        <button class="chip dict-quick" data-term="MACD">MACD</button>
+        <button class="chip dict-quick" data-term="Support & Resistance">S&R</button>
+        <button class="chip dict-quick" data-term="Order Block">Order Block</button>
+        <button class="chip dict-quick" data-term="Fair Value Gap">FVG</button>
+        <button class="chip dict-quick" data-term="Liquidity">Liquidity</button>
+        <button class="chip dict-quick" data-term="Stop Loss">Stop Loss</button>
+        <button class="chip dict-quick" data-term="Risk Reward">R:R Ratio</button>
+        <button class="chip dict-quick" data-term="Pip">Pip</button>
+        <button class="chip dict-quick" data-term="Lot Size">Lot Size</button>
+        <button class="chip dict-quick" data-term="Smart Money Concepts">SMC</button>
+        <button class="chip dict-quick" data-term="ICT Concepts">ICT</button>
+        <button class="chip dict-quick" data-term="Fibonacci">Fibonacci</button>
+        <button class="chip dict-quick" data-term="Bullish Engulfing">Engulfing</button>
+        <button class="chip dict-quick" data-term="Market Structure">Market Structure</button>
+      </div>
+      <div id="dictStatus" style="display:none;" class="scanner-status-bar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        <span>Looking up definition…</span>
+      </div>
+      <div id="dictResult"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== FEAR & GREED ===================== -->
+<div class="profile-modal" id="fearGreedModal" style="display:none;">
+  <div class="profile-modal-inner" style="max-width:500px;">
+    <div class="profile-header">
+      <div class="profile-avatar-lg" style="background:linear-gradient(135deg,#f59e0b,#d97706);font-size:22px;">😱</div>
+      <div><div class="profile-name">Fear &amp; Greed Index</div><div class="profile-email">Crypto + Stocks market sentiment — live AI analysis</div></div>
+      <button class="chart-close" id="fearGreedClose" style="margin-left:auto">✕</button>
+    </div>
+    <div class="ptab-content">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center;">
+        <div style="flex:1;">
+          <label style="font-size:12px;color:var(--text-dim);display:block;margin-bottom:6px;">Select Market</label>
+          <select id="fgMarket" class="risk-field" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--panel-border);border-radius:10px;padding:10px 12px;color:var(--text);font-family:inherit;font-size:13px;outline:none;">
+            <option value="crypto">₿ Crypto (BTC/ETH)</option>
+            <option value="stocks">📊 Stocks (S&P 500)</option>
+            <option value="forex">🌐 Forex (DXY)</option>
+            <option value="gold">🥇 Gold (XAU/USD)</option>
+          </select>
+        </div>
+        <button class="primary-btn" id="fgRunBtn" style="width:auto;padding:11px 22px;white-space:nowrap;background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 20px rgba(245,158,11,0.35);">
+          <span class="btn-text">📡 Get Index</span>
+          <span class="btn-loader" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span>
+        </button>
+      </div>
+      <div id="fgStatus" style="display:none;" class="scanner-status-bar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        <span>Analyzing market sentiment…</span>
+      </div>
+      <div id="fgResult"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== QUICK AI OPINION ===================== -->
+<div class="profile-modal" id="quickOpinionModal" style="display:none;">
+  <div class="profile-modal-inner" style="max-width:500px;">
+    <div class="profile-header">
+      <div class="profile-avatar-lg" style="background:linear-gradient(135deg,#ec4899,#be185d);font-size:22px;">⚡</div>
+      <div><div class="profile-name">Quick AI Opinion</div><div class="profile-email">30-second verdict on any asset — Buy, Sell or Wait?</div></div>
+      <button class="chart-close" id="quickOpinionClose" style="margin-left:auto">✕</button>
+    </div>
+    <div class="ptab-content">
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+        <input type="text" id="qoSymbol" placeholder="BTC, EUR/USD, Gold, NASDAQ, AAPL…" class="debate-input" style="flex:1;" />
+        <button class="primary-btn" id="qoRunBtn" style="width:auto;padding:11px 22px;white-space:nowrap;background:linear-gradient(135deg,#ec4899,#be185d);box-shadow:0 4px 20px rgba(236,72,153,0.35);">
+          <span class="btn-text">⚡ Get Opinion</span>
+          <span class="btn-loader" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span>
+        </button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
+        <button class="chip qo-quick" data-sym="BTC">₿ BTC</button>
+        <button class="chip qo-quick" data-sym="ETH">⟠ ETH</button>
+        <button class="chip qo-quick" data-sym="Gold">🥇 Gold</button>
+        <button class="chip qo-quick" data-sym="EUR/USD">EUR/USD</button>
+        <button class="chip qo-quick" data-sym="NASDAQ">NASDAQ</button>
+        <button class="chip qo-quick" data-sym="SOL">◎ SOL</button>
+      </div>
+      <div id="qoStatus" style="display:none;" class="scanner-status-bar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        <span>AI forming opinion…</span>
+      </div>
+      <div id="qoResult"></div>
     </div>
   </div>
 </div>
