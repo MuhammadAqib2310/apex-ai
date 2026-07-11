@@ -10,97 +10,196 @@
 
 <!-- ===================== AUTH SCREEN ===================== -->
 <div id="authScreen" class="auth-screen">
+
+  <!-- Animated background particles -->
   <div class="auth-bg-glow"></div>
-  <div class="auth-card">
-    <div class="auth-logo-wrap">
-      <div class="logo-lg">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
-          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
-          <polyline points="16 7 22 7 22 13"></polyline>
-        </svg>
+  <div class="auth-particles">
+    <span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+
+  <!-- Two column layout: left = hero, right = form -->
+  <div class="auth-layout">
+
+    <!-- LEFT: Hero panel -->
+    <div class="auth-hero">
+      <div class="auth-hero-logo">
+        <div class="logo-xl">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+            <polyline points="16 7 22 7 22 13"></polyline>
+          </svg>
+        </div>
+        <div>
+          <div class="auth-hero-title">Apex AI</div>
+          <div class="auth-hero-sub">Trading &amp; Market Intelligence</div>
+        </div>
       </div>
-      <div>
-        <h1 class="auth-title">Apex AI</h1>
-        <p class="tagline">Trading &amp; Market Analysis</p>
+
+      <h2 class="auth-hero-headline">Trade Smarter.<br/>Analyze Faster.</h2>
+      <p class="auth-hero-desc">AI-powered analysis for Forex, Crypto, Stocks &amp; Commodities — with live market data and professional-grade insights.</p>
+
+      <div class="auth-feature-list">
+        <div class="auth-feat-item">
+          <div class="auth-feat-icon">📈</div>
+          <div>
+            <div class="auth-feat-title">Live Market Analysis</div>
+            <div class="auth-feat-desc">Real-time prices for BTC, EUR/USD, Gold, NASDAQ &amp; more</div>
+          </div>
+        </div>
+        <div class="auth-feat-item">
+          <div class="auth-feat-icon">🤖</div>
+          <div>
+            <div class="auth-feat-title">AI Trade Signals</div>
+            <div class="auth-feat-desc">Entry, Stop Loss, Take Profit &amp; Risk/Reward — instantly</div>
+          </div>
+        </div>
+        <div class="auth-feat-item">
+          <div class="auth-feat-icon">📒</div>
+          <div>
+            <div class="auth-feat-title">Trading Journal</div>
+            <div class="auth-feat-desc">Track trades, win rate, P&amp;L &amp; get AI coaching</div>
+          </div>
+        </div>
+        <div class="auth-feat-item">
+          <div class="auth-feat-icon">🔔</div>
+          <div>
+            <div class="auth-feat-title">Price Alerts</div>
+            <div class="auth-feat-desc">Get notified the moment price hits your target</div>
+          </div>
+        </div>
+        <div class="auth-feat-item">
+          <div class="auth-feat-icon">🐂</div>
+          <div>
+            <div class="auth-feat-title">Bull vs Bear Debate</div>
+            <div class="auth-feat-desc">AI argues both sides so you can decide with confidence</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-hero-stats">
+        <div class="auth-stat"><div class="auth-stat-num">15+</div><div class="auth-stat-label">Features</div></div>
+        <div class="auth-stat-divider"></div>
+        <div class="auth-stat"><div class="auth-stat-num">50+</div><div class="auth-stat-label">Markets</div></div>
+        <div class="auth-stat-divider"></div>
+        <div class="auth-stat"><div class="auth-stat-num">Free</div><div class="auth-stat-label">Forever</div></div>
       </div>
     </div>
 
-    <div class="auth-features">
-      <div class="feat"><span>📈</span> Live Forex &amp; Crypto Analysis</div>
-      <div class="feat"><span>🤖</span> AI-Powered Trade Signals</div>
-      <div class="feat"><span>🔒</span> Secure &amp; Private</div>
-    </div>
+    <!-- RIGHT: Auth card -->
+    <div class="auth-card-wrap">
+      <div class="auth-card">
 
-    <div class="auth-tabs">
-      <button class="tab-btn active" id="tabLogin">Sign In</button>
-      <button class="tab-btn" id="tabSignup">Create Account</button>
-    </div>
+        <div class="auth-card-header">
+          <div class="auth-card-logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+              <polyline points="16 7 22 7 22 13"></polyline>
+            </svg>
+          </div>
+          <span class="auth-card-brand">Apex AI</span>
+        </div>
 
-    <!-- LOGIN FORM -->
-    <form id="loginForm" class="auth-form">
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-        </span>
-        <input type="email" id="loginEmail" placeholder="Email address" required autocomplete="email" />
-      </div>
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-        </span>
-        <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password" />
-        <button type="button" class="eye-btn" onclick="togglePass('loginPassword',this)">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-        </button>
-      </div>
-      <div class="auth-error" id="loginError"></div>
-      <button type="submit" class="primary-btn" id="loginBtn">
-        <span class="btn-text">Sign In</span>
-        <span class="btn-loader" style="display:none">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-        </span>
-      </button>
-    </form>
+        <div class="auth-tabs">
+          <button class="tab-btn active" id="tabLogin">Sign In</button>
+          <button class="tab-btn" id="tabSignup">Create Account</button>
+        </div>
 
-    <!-- SIGNUP FORM -->
-    <form id="signupForm" class="auth-form" style="display:none;">
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        </span>
-        <input type="text" id="signupName" placeholder="Full name" required autocomplete="name" />
-      </div>
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-        </span>
-        <input type="email" id="signupEmail" placeholder="Email address" required autocomplete="email" />
-      </div>
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-        </span>
-        <input type="password" id="signupPassword" placeholder="Password (min 6 characters)" required autocomplete="new-password" />
-        <button type="button" class="eye-btn" onclick="togglePass('signupPassword',this)">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-        </button>
-      </div>
-      <div class="password-strength" id="pwStrength" style="display:none">
-        <div class="strength-bar"><div id="strengthFill"></div></div>
-        <span id="strengthText"></span>
-      </div>
-      <div class="auth-error" id="signupError"></div>
-      <button type="submit" class="primary-btn" id="signupBtn">
-        <span class="btn-text">Create Account</span>
-        <span class="btn-loader" style="display:none">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-        </span>
-      </button>
-      <p class="terms-note">By signing up you agree to our Terms of Service &amp; Privacy Policy.</p>
-    </form>
+        <!-- LOGIN FORM -->
+        <form id="loginForm" class="auth-form">
+          <div class="auth-form-title">Welcome back 👋</div>
+          <div class="auth-form-sub">Sign in to your Apex AI account</div>
 
-    <div class="auth-footer">
-      <span>🔒 256-bit encrypted · Your data is private</span>
+          <div class="input-group">
+            <span class="input-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            </span>
+            <input type="email" id="loginEmail" placeholder="Email address" required autocomplete="email" />
+          </div>
+
+          <div class="input-group">
+            <span class="input-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </span>
+            <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password" />
+            <button type="button" class="eye-btn" onclick="togglePass('loginPassword',this)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+
+          <div class="auth-error" id="loginError"></div>
+
+          <button type="submit" class="primary-btn" id="loginBtn">
+            <span class="btn-text">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+              Sign In
+            </span>
+            <span class="btn-loader" style="display:none">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              Signing in…
+            </span>
+          </button>
+
+          <div class="auth-switch-hint">Don't have an account? <button type="button" class="auth-link-btn" onclick="document.getElementById('tabSignup').click()">Create one free →</button></div>
+        </form>
+
+        <!-- SIGNUP FORM -->
+        <form id="signupForm" class="auth-form" style="display:none;">
+          <div class="auth-form-title">Get started free 🚀</div>
+          <div class="auth-form-sub">Create your Apex AI account in seconds</div>
+
+          <div class="input-group">
+            <span class="input-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </span>
+            <input type="text" id="signupName" placeholder="Full name" required autocomplete="name" />
+          </div>
+
+          <div class="input-group">
+            <span class="input-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            </span>
+            <input type="email" id="signupEmail" placeholder="Email address" required autocomplete="email" />
+          </div>
+
+          <div class="input-group">
+            <span class="input-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </span>
+            <input type="password" id="signupPassword" placeholder="Password (min 6 characters)" required autocomplete="new-password" />
+            <button type="button" class="eye-btn" onclick="togglePass('signupPassword',this)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+
+          <div class="password-strength" id="pwStrength" style="display:none">
+            <div class="strength-bar"><div id="strengthFill"></div></div>
+            <span id="strengthText"></span>
+          </div>
+
+          <div class="auth-error" id="signupError"></div>
+
+          <button type="submit" class="primary-btn" id="signupBtn">
+            <span class="btn-text">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+              Create Free Account
+            </span>
+            <span class="btn-loader" style="display:none">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              Creating account…
+            </span>
+          </button>
+
+          <div class="auth-switch-hint">Already have an account? <button type="button" class="auth-link-btn" onclick="document.getElementById('tabLogin').click()">Sign in →</button></div>
+
+          <p class="terms-note">By signing up you agree to our <a href="#" style="color:var(--violet-2);text-decoration:none;">Terms</a> &amp; <a href="#" style="color:var(--violet-2);text-decoration:none;">Privacy Policy</a>.</p>
+        </form>
+
+        <div class="auth-footer">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          256-bit encrypted &nbsp;·&nbsp; Your data is private &nbsp;·&nbsp; Free forever
+        </div>
+      </div>
     </div>
   </div>
 </div>
