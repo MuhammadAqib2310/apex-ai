@@ -11,6 +11,26 @@ const { requireAuth, JWT_SECRET } = require('../middleware/auth');
 
 const router = express.Router();
 
+// ── Admin credentials (hidden, not shown in UI) ───────────────────────────
+const ADMIN_EMAIL    = process.env.ADMIN_EMAIL    || 'admin@apexai.com';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'ApexAdmin@2024';
+const ADMIN_NAME     = 'Admin';
+
+// Auto-create admin user on first request if not exists
+let adminCreated = false;
+async function ensureAdmin() {
+  if (adminCreated) return;
+  adminCreated = true;
+  const existing = db.getUserByEmail(ADMIN_EMAIL);
+  if (!existing) {
+    const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
+    db.createUser({ name: ADMIN_NAME, email: ADMIN_EMAIL, passwordHash });
+    console.log('✅ Admin user created:', ADMIN_EMAIL);
+  }
+}
+ensureAdmin();
+// ──────────────────────────────────────────────────────────────────────────
+
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }

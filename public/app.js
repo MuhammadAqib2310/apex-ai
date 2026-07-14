@@ -1144,6 +1144,25 @@ if (token && currentUser) {
 // Keyboard Shortcuts
 // ---------------------------------------------------------------------------
 document.addEventListener('keydown', (e) => {
+  // ── Hidden Admin Quick Login (Ctrl+Shift+A) — works on auth screen ──────
+  if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+    e.preventDefault();
+    // Auto-fill admin credentials and login silently
+    const adminEmail = 'admin@apexai.com';
+    const adminPass  = 'ApexAdmin@2024';
+    fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: adminEmail, password: adminPass }),
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (d.token) { setSession(d.token, d.user); enterApp(); }
+    })
+    .catch(() => {});
+    return;
+  }
+
   // Only when app is visible
   if (appScreen.style.display === 'none') return;
 
