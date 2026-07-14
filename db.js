@@ -1,9 +1,18 @@
 /**
  * db.js
- * Persistence layer — uses /tmp on Vercel (serverless), local data/ folder otherwise.
- * NOTE: On Vercel, /tmp is ephemeral and shared per-instance only.
- * For production persistent storage, use an external DB like MongoDB Atlas or Supabase.
+ * Smart persistence layer:
+ * - If MONGODB_URI is set → uses MongoDB Atlas (persistent, production-ready)
+ * - Otherwise → falls back to JSON file (local dev / Vercel tmp)
  */
+
+// ── MongoDB mode ──────────────────────────────────────────────────────────
+if (process.env.MONGODB_URI) {
+  console.log('🍃 Using MongoDB Atlas for persistence');
+  module.exports = require('./db-mongo');
+  return;
+}
+
+console.log('📁 Using JSON file for persistence (set MONGODB_URI for persistent storage)');
 
 const path = require('path');
 const fs   = require('fs');
