@@ -1025,47 +1025,21 @@ function openChart(rawAlias) {
   const displayName = rawAlias.toUpperCase();
   chartModalTitle.textContent = displayName + ' — Live Chart';
   chartContainer.innerHTML = '';
+  chartContainer.style.height = '520px';
 
   const theme = document.body.classList.contains('light') ? 'light' : 'dark';
 
-  // TradingView official mini chart widget (works without CSP issues)
-  const wrap = document.createElement('div');
-  wrap.className = 'tradingview-widget-container';
-  wrap.style.cssText = 'height:480px;width:100%;';
+  // TradingView chart via direct iframe — most compatible method
+  const encodedSymbol = encodeURIComponent(tvSymbol);
+  const iframe = document.createElement('iframe');
+  iframe.id = 'tradingview_chart';
+  iframe.style.cssText = 'width:100%;height:520px;border:none;border-radius:0 0 16px 16px;';
+  iframe.allowFullscreen = true;
 
-  const inner = document.createElement('div');
-  inner.className = 'tradingview-widget-container__widget';
-  inner.style.cssText = 'height:calc(100% - 32px);width:100%;';
+  // Use TradingView's public chart page embed
+  iframe.src = `https://www.tradingview.com/widgetembed/?symbol=${encodedSymbol}&interval=60&theme=${theme}&style=1&locale=en&hide_side_toolbar=0&allow_symbol_change=1&save_image=0&studies=[]&show_popup_button=1&popup_width=1000&popup_height=650`;
 
-  const copyright = document.createElement('div');
-  copyright.className = 'tradingview-widget-copyright';
-  copyright.innerHTML = '<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span style="color:#8b5cf6;font-size:11px;">Track all markets on TradingView</span></a>';
-
-  const script = document.createElement('script');
-  script.type = 'text/javascript';
-  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-  script.async = true;
-  // TradingView reads config from script innerHTML
-  script.innerHTML = JSON.stringify({
-    autosize: true,
-    symbol: tvSymbol,
-    interval: 'H',
-    timezone: 'Etc/UTC',
-    theme: theme,
-    style: '1',
-    locale: 'en',
-    hide_top_toolbar: false,
-    hide_legend: false,
-    save_image: false,
-    calendar: false,
-    hide_volume: false,
-    support_host: 'https://www.tradingview.com'
-  });
-
-  wrap.appendChild(inner);
-  wrap.appendChild(copyright);
-  wrap.appendChild(script);
-  chartContainer.appendChild(wrap);
+  chartContainer.appendChild(iframe);
   chartModal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
