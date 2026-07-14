@@ -1022,26 +1022,8 @@ function openChart(rawAlias) {
                    CHART_MAP[key + 'usd'] ||
                    'BINANCE:BTCUSDT';
 
-  const displayName = rawAlias.toUpperCase();
-  chartModalTitle.textContent = displayName + ' — Live Chart';
-  chartContainer.innerHTML = '';
-  chartContainer.style.height = '520px';
-
-  const theme = document.body.classList.contains('light') ? 'light' : 'dark';
-
-  // TradingView chart via direct iframe — most compatible method
-  const encodedSymbol = encodeURIComponent(tvSymbol);
-  const iframe = document.createElement('iframe');
-  iframe.id = 'tradingview_chart';
-  iframe.style.cssText = 'width:100%;height:520px;border:none;border-radius:0 0 16px 16px;';
-  iframe.allowFullscreen = true;
-
-  // Use TradingView's public chart page embed
-  iframe.src = `https://www.tradingview.com/widgetembed/?symbol=${encodedSymbol}&interval=60&theme=${theme}&style=1&locale=en&hide_side_toolbar=0&allow_symbol_change=1&save_image=0&studies=[]&show_popup_button=1&popup_width=1000&popup_height=650`;
-
-  chartContainer.appendChild(iframe);
-  chartModal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
+  // Open directly on TradingView — no iframe issues
+  window.open(`https://www.tradingview.com/chart/?symbol=${encodeURIComponent(tvSymbol)}`, '_blank');
 }
 
 chartClose.addEventListener('click', () => {
