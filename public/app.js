@@ -256,6 +256,20 @@ const TICKER_SYMBOLS = [
 ];
 
 async function loadTicker() {
+  // Only load ticker if market data is available
+  try {
+    const h = await fetch(`${API}/health`);
+    const d = await h.json();
+    if (!d.marketDataConfigured) {
+      // Hide ticker bar gracefully
+      TICKER_SYMBOLS.forEach(item => {
+        const el = document.getElementById(item.id);
+        if (el) { el.textContent = 'N/A'; el.style.opacity = '0.4'; }
+      });
+      return;
+    }
+  } catch (_) { return; }
+
   for (const item of TICKER_SYMBOLS) {
     fetchTickerPrice(item);
   }
@@ -1213,6 +1227,26 @@ dashboardModal.addEventListener('click', (e) => { if (e.target === dashboardModa
 async function openDashboard() {
   dashboardModal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+
+  // Check if market data is configured
+  let marketConfigured = false;
+  try {
+    const hRes = await fetch(`${API}/health`);
+    const hd = await hRes.json();
+    marketConfigured = hd.marketDataConfigured;
+  } catch (_) {}
+
+  if (!marketConfigured) {
+    dashboardGrid.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:32px 20px;color:var(--text-dim);">
+        <div style="font-size:40px;margin-bottom:12px;">📊</div>
+        <div style="font-size:15px;color:var(--text-mid);margin-bottom:8px;">Live prices not configured</div>
+        <div style="font-size:13px;">Add <code style="background:var(--panel);padding:2px 6px;border-radius:4px;">TWELVE_DATA_API_KEY</code> in Vercel environment variables to enable live prices.</div>
+        <div style="margin-top:16px;font-size:12px;color:var(--text-dim);">Free key at <a href="https://twelvedata.com" target="_blank" style="color:var(--violet-2)">twelvedata.com</a> — 800 req/day</div>
+      </div>`;
+    return;
+  }
+
   dashboardGrid.innerHTML = '<div class="dash-loading">⏳ Loading live prices…</div>';
 
   const results = await Promise.all(
