@@ -465,13 +465,10 @@ async function sendMessage() {
   // Show user message with file badges
   addMessageWithFiles(text || 'Analyze attached file(s)', filesSnapshot);
 
-  // Create empty assistant bubble for streaming
+  // Show typing indicator
   const { div: streamDiv, bubble: streamBubble } = createStreamingBubble();
   messagesEl.appendChild(streamDiv);
   messagesEl.scrollTop = messagesEl.scrollHeight;
-
-  let fullText = '';
-  let metaData = null;
 
   try {
     const res = await fetch(`${API}/chat`, {
@@ -485,48 +482,20 @@ async function sendMessage() {
       try { const d = await res.json(); errMsg = d.error || errMsg; } catch(_) {}
       streamDiv.remove();
       addMessage('assistant', `⚠️ Error: ${errMsg}`);
-      isSending = false;
-      sendBtn.disabled = false;
       return;
     }
 
-    const reader  = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer    = '';
+    const data = await res.json();
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+    streamDiv.remove();
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop(); // keep incomplete line in buffer
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || !trimmed.startsWith('data: ')) continue;
-
-        try {
-          const json = JSON.parse(trimmed.slice(6));
-
-          if (json.type === 'meta') {
-            metaData = json;
-            currentConversationId = json.conversationId;
-          } else if (json.type === 'delta') {
-            fullText += json.delta;
-            streamBubble.innerHTML = renderMarkdown(fullText) + '<span class="cursor-blink">▌</span>';
-            messagesEl.scrollTop   = messagesEl.scrollHeight;
-          } else if (json.type === 'done') {
-            streamDiv.remove();
-            addMessage('assistant', fullText, metaData?.liveDataUsed, text);
-            playReplySound();
-            loadConversations();
-          } else if (json.type === 'error') {
-            streamDiv.remove();
-            addMessage('assistant', `⚠️ Error: ${json.error}`);
-          }
-        } catch (_) {}
-      }
+    if (data.reply) {
+      currentConversationId = data.conversationId;
+      addMessage('assistant', data.reply, data.liveDataUsed, text);
+      playReplySound();
+      loadConversations();
+    } else if (data.error) {
+      addMessage('assistant', `⚠️ Error: ${data.error}`);
     }
 
   } catch (err) {

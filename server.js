@@ -64,6 +64,6 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Apex AI server running on http://localhost:${PORT}`);
-  console.log(`🔑 Anthropic API key configured: ${Boolean(process.env.ANTHROPIC_API_KEY)}`);
+  console.log(`🔑 Groq API key configured: ${Boolean(process.env.GROQ_API_KEY)}`);
   console.log(`📈 Twelve Data API key configured: ${Boolean(process.env.TWELVE_DATA_API_KEY)}`);
 });

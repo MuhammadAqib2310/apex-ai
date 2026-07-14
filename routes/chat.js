@@ -169,7 +169,7 @@ router.patch('/conversations/:id/rename', requireAuth, (req, res) => {
 // ---------------------------------------------------------------------------
 
 // POST /api/chat  { conversationId, message }
-// Streaming via Server-Sent Events
+// Non-streaming JSON response (Vercel-compatible)
 router.post('/chat', requireAuth, async (req, res) => {
   try {
     const { conversationId, message } = req.body;
@@ -181,7 +181,7 @@ router.post('/chat', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Message too long. Please keep it under 8000 characters.' });
     }
     if (!GROQ_API_KEY) {
-      return res.status(500).json({ error: 'Server missing GROQ_API_KEY. Add it to your .env file.' });
+      return res.status(500).json({ error: 'Server missing GROQ_API_KEY. Add it to your Vercel environment variables.' });
     }
 
     // Resolve or create conversation
@@ -210,16 +210,7 @@ router.post('/chat', requireAuth, async (req, res) => {
       return { role: m.role, content: m.content };
     });
 
-    // --- SSE headers ---
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('X-Accel-Buffering', 'no');
-
-    // Send conversation ID and live flag immediately
-    res.write(`data: ${JSON.stringify({ type: 'meta', conversationId: convoId, liveDataUsed: Boolean(liveContext) })}\n\n`);
-
-    // Call Groq with stream: true
+    // Call Groq — non-streaming for Vercel compatibility
     const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -229,7 +220,7 @@ router.post('/chat', requireAuth, async (req, res) => {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 800,
-        stream: true,
+        stream: false,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT_NEW },
           ...apiMessages,
@@ -239,52 +230,24 @@ router.post('/chat', requireAuth, async (req, res) => {
 
     if (!groqRes.ok) {
       const errData = await groqRes.json();
-      res.write(`data: ${JSON.stringify({ type: 'error', error: errData?.error?.message || 'Upstream API error' })}\n\n`);
-      res.end();
-      return;
+      return res.status(502).json({ error: errData?.error?.message || 'AI API error' });
     }
 
-    let fullReply = '';
-    const reader = groqRes.body.getReader();
-    const decoder = new TextDecoder();
+    const data = await groqRes.json();
+    const reply = data.choices?.[0]?.message?.content || '';
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+    // Save reply to DB
+    db.addMessage(convoId, 'assistant', reply);
 
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n');
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed === 'data: [DONE]') continue;
-        if (!trimmed.startsWith('data: ')) continue;
-
-        try {
-          const json = JSON.parse(trimmed.slice(6));
-          const delta = json.choices?.[0]?.delta?.content;
-          if (delta) {
-            fullReply += delta;
-            res.write(`data: ${JSON.stringify({ type: 'delta', delta })}\n\n`);
-          }
-        } catch (_) {}
-      }
-    }
-
-    // Save full reply to DB
-    db.addMessage(convoId, 'assistant', fullReply);
-
-    res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
-    res.end();
+    return res.json({
+      reply,
+      conversationId: convoId,
+      liveDataUsed: Boolean(liveContext),
+    });
 
   } catch (err) {
     console.error('Chat endpoint error:', err);
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Internal server error' });
-    } else {
-      res.write(`data: ${JSON.stringify({ type: 'error', error: 'Internal server error' })}\n\n`);
-      res.end();
-    }
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
