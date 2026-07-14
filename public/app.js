@@ -225,6 +225,9 @@ function enterApp() {
   checkHealth();
   loadConversations();
   loadTicker();
+  requestNotificationPermission();
+  // Alert polling starts after a short delay so all vars are initialized
+  setTimeout(() => startAlertPolling(), 500);
 }
 
 async function checkHealth() {
@@ -2450,33 +2453,6 @@ async function runCoach() {
     setLoading(coachRunBtn, false);
     coachStatus.style.display = 'none';
   }
-}
-
-// ===========================================================================
-// PATCH enterApp — start alert polling + request notifications
-// ===========================================================================
-const _origEnterApp = enterApp;
-// Override enterApp to hook in our new features
-const enterAppOrig = enterApp;
-window.__apexEnterAppExtended = true;
-
-// Patch: after user logs in, start polling and request notification permission
-const origEnterAppFn = window.enterApp;
-document.addEventListener('DOMContentLoaded', () => {});
-
-// Direct hook — run after enterApp
-function enterApp() {
-  authScreen.style.display = 'none';
-  appScreen.style.display  = 'flex';
-  const name = currentUser?.name || 'User';
-  userNameEl.textContent   = name;
-  userAvatar.textContent   = name.charAt(0).toUpperCase();
-  checkHealth();
-  loadConversations();
-  loadTicker();
-  // New: start alert polling + notifications
-  requestNotificationPermission();
-  startAlertPolling();
 }
 
 // ===========================================================================
