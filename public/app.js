@@ -1022,8 +1022,23 @@ function openChart(rawAlias) {
                    CHART_MAP[key + 'usd'] ||
                    'BINANCE:BTCUSDT';
 
-  // Open directly on TradingView — no iframe issues
-  window.open(`https://www.tradingview.com/chart/?symbol=${encodeURIComponent(tvSymbol)}`, '_blank');
+  // Show modal with embedded TradingView Advanced Chart widget
+  chartModalTitle.textContent = '📈 ' + tvSymbol.split(':')[1] || rawAlias.toUpperCase();
+  chartContainer.innerHTML = '';
+  chartModal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  // Use TradingView iframe embed (most reliable, no JS widget issues)
+  const isDark = !document.body.classList.contains('light');
+  const theme = isDark ? 'dark' : 'light';
+
+  const iframe = document.createElement('iframe');
+  iframe.src = `https://s.tradingview.com/widgetembed/?frameElementId=tv_chart&symbol=${encodeURIComponent(tvSymbol)}&interval=1H&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3fa&studies=[]&theme=${theme}&style=1&timezone=Etc%2FUTC&studies_overrides={}&overrides={}&enabled_features=[]&disabled_features=[]&locale=en`;
+  iframe.style.cssText = 'width:100%;height:100%;border:none;border-radius:0 0 12px 12px;';
+  iframe.setAttribute('allowtransparency', 'true');
+  iframe.setAttribute('scrolling', 'no');
+  iframe.setAttribute('allowfullscreen', '');
+  chartContainer.appendChild(iframe);
 }
 
 chartClose.addEventListener('click', () => {

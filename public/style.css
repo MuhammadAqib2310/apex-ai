@@ -691,10 +691,21 @@ textarea::placeholder { color: var(--text-dim); }
   background: var(--bg-1);
   border: 1px solid var(--panel-border);
   border-radius: 18px;
-  width: 100%; max-width: 900px;
+  width: 100%; max-width: 960px;
+  max-height: 90vh;
   overflow: hidden;
   box-shadow: var(--shadow);
   animation: slideUp .25s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+#chartContainer {
+  flex: 1;
+  height: 540px;
+  min-height: 400px;
+  width: 100%;
+  background: var(--bg-0);
 }
 .chart-modal-header {
   display: flex; align-items: center; justify-content: space-between;
