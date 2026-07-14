@@ -978,68 +978,68 @@ function addMessageWithFiles(text, files) {
 // TradingView Chart Modal
 // ---------------------------------------------------------------------------
 const CHART_MAP = {
-  'btc': 'BINANCE:BTCUSDT', 'btcusd': 'BINANCE:BTCUSDT', 'btc/usd': 'BINANCE:BTCUSDT',
-  'eth': 'BINANCE:ETHUSDT', 'ethusd': 'BINANCE:ETHUSDT', 'eth/usd': 'BINANCE:ETHUSDT',
-  'sol': 'BINANCE:SOLUSDT', 'solusd': 'BINANCE:SOLUSDT', 'sol/usd': 'BINANCE:SOLUSDT',
-  'xrp': 'BINANCE:XRPUSDT', 'bnb': 'BINANCE:BNBUSDT', 'doge': 'BINANCE:DOGEUSDT',
-  'eurusd': 'FX:EURUSD', 'eur/usd': 'FX:EURUSD',
-  'gbpusd': 'FX:GBPUSD', 'gbp/usd': 'FX:GBPUSD',
+  'btc': 'BINANCE:BTCUSDT', 'btcusd': 'BINANCE:BTCUSDT', 'btc/usd': 'BINANCE:BTCUSDT', 'bitcoin': 'BINANCE:BTCUSDT',
+  'eth': 'BINANCE:ETHUSDT', 'ethusd': 'BINANCE:ETHUSDT', 'eth/usd': 'BINANCE:ETHUSDT', 'ethereum': 'BINANCE:ETHUSDT',
+  'sol': 'BINANCE:SOLUSDT', 'solusd': 'BINANCE:SOLUSDT', 'sol/usd': 'BINANCE:SOLUSDT', 'solana': 'BINANCE:SOLUSDT',
+  'xrp': 'BINANCE:XRPUSDT', 'xrpusd': 'BINANCE:XRPUSDT', 'xrp/usd': 'BINANCE:XRPUSDT', 'ripple': 'BINANCE:XRPUSDT',
+  'bnb': 'BINANCE:BNBUSDT', 'bnbusd': 'BINANCE:BNBUSDT', 'bnb/usd': 'BINANCE:BNBUSDT',
+  'doge': 'BINANCE:DOGEUSDT', 'dogeusd': 'BINANCE:DOGEUSDT', 'dogecoin': 'BINANCE:DOGEUSDT',
+  'ada': 'BINANCE:ADAUSDT', 'cardano': 'BINANCE:ADAUSDT',
+  'avax': 'BINANCE:AVAXUSDT', 'avalanche': 'BINANCE:AVAXUSDT',
+  'dot': 'BINANCE:DOTUSDT', 'polkadot': 'BINANCE:DOTUSDT',
+  'matic': 'BINANCE:MATICUSDT', 'polygon': 'BINANCE:MATICUSDT',
+  'link': 'BINANCE:LINKUSDT', 'chainlink': 'BINANCE:LINKUSDT',
+  'ltc': 'BINANCE:LTCUSDT', 'litecoin': 'BINANCE:LTCUSDT',
+  'eurusd': 'FX:EURUSD', 'eur/usd': 'FX:EURUSD', 'euro': 'FX:EURUSD',
+  'gbpusd': 'FX:GBPUSD', 'gbp/usd': 'FX:GBPUSD', 'pound': 'FX:GBPUSD',
   'usdjpy': 'FX:USDJPY', 'usd/jpy': 'FX:USDJPY',
-  'gold': 'TVC:GOLD', 'xauusd': 'TVC:GOLD', 'xau/usd': 'TVC:GOLD',
-  'silver': 'TVC:SILVER', 'oil': 'TVC:USOIL',
-  'nasdaq': 'NASDAQ:NDX', 'nas100': 'NASDAQ:NDX',
-  'us30': 'DJ:DJI', 'dow': 'DJ:DJI',
-  'sp500': 'SP:SPX', 's&p500': 'SP:SPX',
+  'usdchf': 'FX:USDCHF', 'usd/chf': 'FX:USDCHF',
+  'audusd': 'FX:AUDUSD', 'aud/usd': 'FX:AUDUSD',
+  'usdcad': 'FX:USDCAD', 'usd/cad': 'FX:USDCAD',
+  'nzdusd': 'FX:NZDUSD', 'nzd/usd': 'FX:NZDUSD',
+  'gold': 'TVC:GOLD', 'xauusd': 'TVC:GOLD', 'xau/usd': 'TVC:GOLD', 'xau': 'TVC:GOLD',
+  'silver': 'TVC:SILVER', 'xagusd': 'TVC:SILVER', 'xag/usd': 'TVC:SILVER',
+  'oil': 'TVC:USOIL', 'crude oil': 'TVC:USOIL', 'wti': 'TVC:USOIL',
+  'nasdaq': 'NASDAQ:NDX', 'nas100': 'NASDAQ:NDX', 'ndx': 'NASDAQ:NDX',
+  'us30': 'DJ:DJI', 'dow': 'DJ:DJI', 'dow jones': 'DJ:DJI',
+  'sp500': 'SP:SPX', 's&p500': 'SP:SPX', 'spx': 'SP:SPX',
 };
 
 function detectChartSymbol(text) {
   if (!text) return null;
   const lower = text.toLowerCase();
-  for (const [alias] of Object.entries(CHART_MAP)) {
-    if (lower.includes(alias)) return alias.toUpperCase().replace('/', '');
+  for (const alias of Object.keys(CHART_MAP)) {
+    if (lower.includes(alias)) return alias;
   }
   return null;
 }
 
 function openChart(rawAlias) {
-  const key = rawAlias.toLowerCase().replace('usd', '/usd').replace('eur/usd','eurusd').replace('/usd','usd');
-  // Try a few key variants
-  const tvSymbol = CHART_MAP[rawAlias.toLowerCase()] ||
-                   CHART_MAP[rawAlias.toLowerCase().replace('usd','/usd')] ||
-                   CHART_MAP[rawAlias.toLowerCase() + 'usd'] ||
+  const key = rawAlias.toLowerCase();
+  const tvSymbol = CHART_MAP[key] ||
+                   CHART_MAP[key.replace('/usd', 'usd')] ||
+                   CHART_MAP[key + '/usd'] ||
+                   CHART_MAP[key + 'usd'] ||
                    'BINANCE:BTCUSDT';
-  chartModalTitle.textContent = rawAlias + ' — Live Chart';
+
+  const displayName = rawAlias.toUpperCase();
+  chartModalTitle.textContent = displayName + ' — Live Chart';
   chartContainer.innerHTML = '';
-  const script = document.createElement('script');
-  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-  script.async = true;
-  script.innerHTML = JSON.stringify({
-    "autosize": true,
-    "symbol": tvSymbol,
-    "interval": "1H",
-    "timezone": "Etc/UTC",
-    "theme": "dark",
-    "style": "1",
-    "locale": "en",
-    "backgroundColor": "#0e0c1a",
-    "gridColor": "rgba(255,255,255,0.04)",
-    "hide_top_toolbar": false,
-    "hide_legend": false,
-    "save_image": false,
-    "calendar": false,
-    "hide_volume": false,
-    "support_host": "https://www.tradingview.com"
-  });
-  const wrap = document.createElement('div');
-  wrap.className = 'tradingview-widget-container';
-  wrap.style.height = '480px';
-  wrap.style.width = '100%';
-  const inner = document.createElement('div');
-  inner.className = 'tradingview-widget-container__widget';
-  inner.style.height = '100%';
-  wrap.appendChild(inner);
-  wrap.appendChild(script);
-  chartContainer.appendChild(wrap);
+
+  // Use TradingView iframe embed (most reliable method)
+  const theme = document.body.classList.contains('light') ? 'light' : 'dark';
+  const bgColor = theme === 'light' ? '%23ffffff' : '%230e0c1a';
+
+  const iframe = document.createElement('iframe');
+  iframe.src = `https://s.tradingview.com/widgetembed/?frameElementId=tv_chart&symbol=${encodeURIComponent(tvSymbol)}&interval=1H&theme=${theme}&style=1&locale=en&toolbar_bg=%23f1f3f6&enable_publishing=0&hide_top_toolbar=0&hide_legend=0&save_image=0&backgroundColor=${bgColor}&gridColor=rgba%28255%2C255%2C255%2C0.04%29`;
+  iframe.style.width = '100%';
+  iframe.style.height = '480px';
+  iframe.style.border = 'none';
+  iframe.setAttribute('allowtransparency', 'true');
+  iframe.setAttribute('scrolling', 'no');
+  iframe.setAttribute('frameborder', '0');
+
+  chartContainer.appendChild(iframe);
   chartModal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
