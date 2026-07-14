@@ -261,7 +261,6 @@ async function loadTicker() {
     const h = await fetch(`${API}/health`);
     const d = await h.json();
     if (!d.marketDataConfigured) {
-      // Hide ticker bar gracefully
       TICKER_SYMBOLS.forEach(item => {
         const el = document.getElementById(item.id);
         if (el) { el.textContent = 'N/A'; el.style.opacity = '0.4'; }
@@ -270,11 +269,18 @@ async function loadTicker() {
     }
   } catch (_) { return; }
 
+  // Fetch sequentially with delay to avoid rate limit
   for (const item of TICKER_SYMBOLS) {
-    fetchTickerPrice(item);
+    await fetchTickerPrice(item);
+    await new Promise(r => setTimeout(r, 300));
   }
-  // Refresh every 60 seconds
-  setInterval(() => { TICKER_SYMBOLS.forEach(fetchTickerPrice); }, 60000);
+  // Refresh every 90 seconds
+  setInterval(async () => {
+    for (const item of TICKER_SYMBOLS) {
+      await fetchTickerPrice(item);
+      await new Promise(r => setTimeout(r, 300));
+    }
+  }, 90000);
 }
 
 async function fetchTickerPrice({ id, symbol }) {
@@ -1206,18 +1212,18 @@ const dashboardGrid  = document.getElementById('dashboardGrid');
 const dashboardBtn   = document.getElementById('dashboardBtn');
 
 const DASHBOARD_SYMBOLS = [
-  { symbol: 'BTC/USD',  name: 'Bitcoin',    icon: '₿'  },
-  { symbol: 'ETH/USD',  name: 'Ethereum',   icon: '⟠'  },
-  { symbol: 'SOL/USD',  name: 'Solana',     icon: '◎'  },
-  { symbol: 'XRP/USD',  name: 'XRP/Ripple', icon: '✕'  },
-  { symbol: 'EUR/USD',  name: 'Euro/Dollar',icon: '🇪🇺' },
-  { symbol: 'GBP/USD',  name: 'Pound/Dollar',icon:'🇬🇧' },
-  { symbol: 'USD/JPY',  name: 'Dollar/Yen', icon: '🇯🇵' },
-  { symbol: 'XAU/USD',  name: 'Gold',       icon: '🥇' },
-  { symbol: 'XAG/USD',  name: 'Silver',     icon: '🥈' },
-  { symbol: 'NDX',      name: 'NASDAQ 100', icon: '📊' },
-  { symbol: 'DJI',      name: 'Dow Jones',  icon: '🏛️' },
-  { symbol: 'BNB/USD',  name: 'BNB',        icon: '🔶' },
+  { symbol: 'BTC/USD',  name: 'Bitcoin',      icon: '₿'  },
+  { symbol: 'ETH/USD',  name: 'Ethereum',     icon: '⟠'  },
+  { symbol: 'SOL/USD',  name: 'Solana',       icon: '◎'  },
+  { symbol: 'XRP/USD',  name: 'XRP/Ripple',   icon: '✕'  },
+  { symbol: 'EUR/USD',  name: 'Euro/Dollar',  icon: '🇪🇺' },
+  { symbol: 'GBP/USD',  name: 'Pound/Dollar', icon: '🇬🇧' },
+  { symbol: 'USD/JPY',  name: 'Dollar/Yen',   icon: '🇯🇵' },
+  { symbol: 'XAU/USD',  name: 'Gold',         icon: '🥇' },
+  { symbol: 'AUD/USD',  name: 'AUD/Dollar',   icon: '🇦🇺' },
+  { symbol: 'USD/CAD',  name: 'Dollar/CAD',   icon: '🇨🇦' },
+  { symbol: 'USD/CHF',  name: 'Dollar/CHF',   icon: '🇨🇭' },
+  { symbol: 'NZD/USD',  name: 'NZD/Dollar',   icon: '🇳🇿' },
 ];
 
 dashboardBtn.addEventListener('click', () => { openDashboard(); closeSidebar(); });
@@ -1249,18 +1255,19 @@ async function openDashboard() {
 
   dashboardGrid.innerHTML = '<div class="dash-loading">⏳ Loading live prices…</div>';
 
-  const results = await Promise.all(
-    DASHBOARD_SYMBOLS.map(async (item) => {
-      try {
-        const res = await fetch(`${API}/market/quote?symbol=${encodeURIComponent(item.symbol)}`, { headers: authHeaders() });
-        if (!res.ok) return { ...item, price: null };
-        const data = await res.json();
-        return { ...item, ...data.quote };
-      } catch (_) {
-        return { ...item, price: null };
-      }
-    })
-  );
+  // Fetch sequentially with small delay to avoid rate limiting (free plan = 8 req/min)
+  const results = [];
+  for (const item of DASHBOARD_SYMBOLS) {
+    try {
+      const res = await fetch(`${API}/market/quote?symbol=${encodeURIComponent(item.symbol)}`, { headers: authHeaders() });
+      if (!res.ok) { results.push({ ...item, price: null }); continue; }
+      const data = await res.json();
+      results.push({ ...item, ...data.quote });
+    } catch (_) {
+      results.push({ ...item, price: null });
+    }
+    await new Promise(r => setTimeout(r, 200)); // 200ms delay between requests
+  }
 
   dashboardGrid.innerHTML = '';
   results.forEach((q) => {
