@@ -255,7 +255,10 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         New Analysis
       </button>
-      <h3>AI Tools</h3>
+      <h3 class="sidebar-section-title" onclick="toggleSection('aiTools')">
+        AI Tools <span class="section-arrow" id="aiToolsArrow">▾</span>
+      </h3>
+      <div class="sidebar-section" id="aiTools">
       <button class="dashboard-btn" id="dashboardBtn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         Market Dashboard
@@ -288,8 +291,12 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
         AI Coach
       </button>
+      </div>
 
-      <h3>Smart Tools</h3>
+      <h3 class="sidebar-section-title" onclick="toggleSection('smartTools')">
+        Smart Tools <span class="section-arrow" id="smartToolsArrow">▾</span>
+      </h3>
+      <div class="sidebar-section" id="smartTools">
       <button class="dashboard-btn" id="converterBtn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
         Currency Converter
@@ -310,8 +317,12 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></svg>
         Quick AI Opinion
       </button>
+      </div>
 
-      <h3>Quick Analysis</h3>
+      <h3 class="sidebar-section-title" onclick="toggleSection('quickAnalysis')">
+        Quick Analysis <span class="section-arrow" id="quickAnalysisArrow">▾</span>
+      </h3>
+      <div class="sidebar-section" id="quickAnalysis">
       <button class="quick-btn" data-prompt="Give me a full technical analysis of EUR/USD">🇪🇺 EUR/USD</button>
       <button class="quick-btn" data-prompt="Give me a full technical analysis of GBP/USD">🇬🇧 GBP/USD</button>
       <button class="quick-btn" data-prompt="Give me a full technical analysis of BTC/USD">₿ BTC/USD</button>
@@ -320,9 +331,14 @@
       <button class="quick-btn" data-prompt="Give me a full technical analysis of NASDAQ">📊 NASDAQ</button>
       <button class="quick-btn" data-prompt="Give me a full technical analysis of US30">🏛️ US30 (Dow Jones)</button>
       <button class="quick-btn" data-prompt="Give me a full technical analysis of SOL/USD">◎ SOL/USD</button>
+      </div>
 
-      <h3>History</h3>
+      <h3 class="sidebar-section-title" onclick="toggleSection('historySection')">
+        History <span class="section-arrow" id="historySectionArrow">▾</span>
+      </h3>
+      <div class="sidebar-section" id="historySection">
       <div id="conversationList" class="conversation-list"></div>
+      </div>
 
       <div class="disclaimer-box">
         ⚠️ Educational analysis only — not financial advice. Risk only 1–2% per trade.

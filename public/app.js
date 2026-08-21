@@ -213,6 +213,15 @@ function closeSidebar() {
   sidebarOverlay.classList.remove('active');
 }
 
+// Collapsible sidebar sections
+function toggleSection(id) {
+  const section = document.getElementById(id);
+  const arrow   = document.getElementById(id + 'Arrow');
+  if (!section) return;
+  const collapsed = section.classList.toggle('collapsed');
+  if (arrow) arrow.style.transform = collapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+}
+
 // ---------------------------------------------------------------------------
 // Enter App
 // ---------------------------------------------------------------------------
