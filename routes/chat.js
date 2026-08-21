@@ -13,7 +13,7 @@ const { buildLiveMarketContext } = require('../utils/marketData');
 const router = express.Router();
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const MODEL = 'gemini-1.5-flash';
+const MODEL = 'gemini-2.0-flash';
 
 const SYSTEM_PROMPT = `You are an elite AI Trading & Market Analysis Assistant with expertise in Forex, Cryptocurrency, Stocks, Commodities, and Indices.
 Your mission is to provide professional market analysis using real-time market data, technical indicators, price action, volume, economic events, and sentiment analysis.
@@ -271,7 +271,7 @@ router.post('/ai-tool', requireAuth, async (req, res) => {
     }
 
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
